@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf8"/>
+
+        <title>Basic shapes</title>
+        <link rel="stylesheet" type="text/css" href="../dist/style.css">
+        <style>
+            .element *{
+                vector-effect: non-scaling-stroke;
+            }
+
+            #shape_controls{
+                position: absolute;
+                pointer-events:none;
+            }
+            .shape_controller {
+                position: absolute;
+                border-style: solid;
+                border-width: 1px;
+                background: white;
+                pointer-events:auto;
+                width:6px;
+                height:6px;
+                border-color: rgb(136, 51, 51);
+            }
+
+            .shape_controller.n.w {
+                left: -4px;
+                top: -4px;
+                cursor: nw-resize;
+            }
+            .shape_controller.n.e{
+
+                cursor: ne-resize;
+            }
+            .shape_controller.s.w{
+
+                cursor: sw-resize;
+            }
+            .shape_controller.s.e{
+
+                cursor: se-resize;
+            }
+
+            .highlighted{
+                fill: #ff7f0e !important;
+            }
+
+            .connection_background{
+                fill:none;
+                cursor: crosshair;
+                stroke: #fff;
+                opacity: 0;
+                stroke-width: 20;
+            }
+            .connection_outline{
+                fill:none;
+                cursor: crosshair;
+                stroke: #fff;
+                stroke-width: 4;
+                pointer-events: none;
+            }
+            .connection_line{
+                fill:none;
+                cursor: crosshair;
+                stroke-width:3;
+                pointer-events: none;
+            }
+
+            .selected{
+                stroke-width: 2;
+                stroke: #ff7f0e !important;
+            }
+        </style>
+
+    </head>
+    <body>
+
+        <div id="chart"></div>
+
+        <script>
+            var joint = {};
+            SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformToElement || function (toElement) {
+                        return toElement.getScreenCTM().inverse().multiply(this.getScreenCTM());
+                    };
+        </script>
+
+        <!-- Dependencies: -->
+        <script src="../lib/d3/d3.js"></script>
+        <script src="../lib/jquery/jquery.js"></script>
+        <script src="../lib/lodash/lodash.js"></script>
+        <script src="../lib/backbone/backbone.js"></script>
+        <script src="../lib/jcanvas/jcanvas.js"></script>
+        <script src="../src/geometry.js"></script>
+
+
+        <script src="../src/core.js"></script>
+        <script src="../src/cell.js"></script>
+        <script src="../src/element.js"></script>
+        <script src="../src/link.js"></script>
+        <script src="../src/graph.js"></script>
+
+        <script src="../src/vectorizer.js"></script>
+
+        <script src="../src/shape/shape.basic.js"></script>
+        <script src="../src/shape/shape.devs.js"></script>
+        <script src="../src/shape/shape.node.js"></script>
+        <script src="../src/paper.js"></script>
+
+        <script src="../src/chart.js"></script>
+
+        <script src="../src/connectors/connectors.normal.js"></script>
+
+        <script src="../src/plugins/plugins.Halo.js"></script>
+        <script src="./basic.js"></script>
+
+    </body>
+</html>
