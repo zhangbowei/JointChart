@@ -16,14 +16,18 @@ var json = '{"id":"30127b7.fcfed84","x":429,"y":487,"w":140,"z":"210d0848.def2f8
 var data = JSON.parse(json);
 var halo;
 
-chart.on('cell:pointerup',function(cellView){
-    if (cellView.model instanceof org.dedu.draw.Link) return;
-    if(!halo){
-
-        halo = new org.dedu.draw.plugins.Halo({cellView:cellView});
-    }
-    halo.render({cellView:cellView});
-});
+//chart.on('cell:pointerdown',function(cellView){
+//    if (cellView.model instanceof org.dedu.draw.Link) return;
+//    if(cellView.model.get('selected') && cellView.model.previous('selected') === false){
+//        if(!halo){
+//
+//            halo = new org.dedu.draw.plugins.Halo({cellView:cellView});
+//        }
+//
+//        halo.render({cellView:cellView});
+//    }
+//
+//});
 
 
 var rb = new org.dedu.draw.shape.basic.Rect({

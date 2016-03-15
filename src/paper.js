@@ -102,6 +102,8 @@ org.dedu.draw.Paper = Backbone.View.extend({
         this.listenTo(this.model, 'reset', this.resetViews);
         this.listenTo(this.model, 'sort', this.sortViews);
 
+        this.moving_set = [];//mush views move together
+
 
         this.setOrigin();
         this.setDimensions();
@@ -120,7 +122,8 @@ org.dedu.draw.Paper = Backbone.View.extend({
       "mousedown .vis":"canvasMouseDown",
       "mousemove .vis":"canvasMouseMove",
       "mouseup .vis":"canvasMouseUp",
-      "mouseover .element":"cellMouseover"
+      "mouseover .element":"cellMouseover",
+
     },
 
     onCellAdded:function(cell,graph,opt){
@@ -265,6 +268,8 @@ org.dedu.draw.Paper = Backbone.View.extend({
 
 
     blank_pointDown:function(evt,x,y){
+        this.unfocus();
+
         var lasso = this.lasso;
         var mouse_mode = this.mouse_mode;
 
@@ -326,17 +331,35 @@ org.dedu.draw.Paper = Backbone.View.extend({
         var lasso = this.lasso;
         var mouse_mode = this.mouse_mode;
         if (lasso) {
+            this.moving_set = [];
+
             var x = parseInt(lasso.attr("x"));
             var y = parseInt(lasso.attr("y"));
             var x2 = x + parseInt(lasso.attr("width"));
             var y2 = y + parseInt(lasso.attr("height"));
 
+            _.each(this._views, function (cellView) {
+                if(cellView instanceof org.dedu.draw.LinkView){
+                    return;
+                }
+                var model = cellView.model;
+                var position = model.get('position');
+
+                model.set('selected',position.x>x && position.x<x2 && position.y>y && position.y<y2);
+                if(model.get('selected')){
+                    this.moving_set.push(cellView);
+                }
+
+            },this);
+
+            this.updateSelection();
+
             lasso.remove();
             lasso = null;
         }
     },
-
     canvasMouseDown:function(evt){
+
         evt.preventDefault();
 
         var evt = org.dedu.draw.util.normalizeEvent(evt);
@@ -347,6 +370,12 @@ org.dedu.draw.Paper = Backbone.View.extend({
             if(this.guard(evt,view)) return;
             this.sourceView = view;
             this.sourceView.pointerdown(evt, localPoint.x, localPoint.y);
+
+            if(!view.model.get('selected')){
+                this.moving_set = [];
+                this.moving_set.push(view);
+            }
+            this.focus();
         }else{
             this.trigger('blank:pointerdown', evt, localPoint.x, localPoint.y);
         }
@@ -360,9 +389,17 @@ org.dedu.draw.Paper = Backbone.View.extend({
         if(this.sourceView){
             //Mouse moved counter.
             // this._mousemoved++;
+            var grid = this.options.gridSize;
+            var position = this.sourceView.model.get('position');
+            var tx = g.snapToGrid(position.x, grid) - position.x + g.snapToGrid(localPoint.x - this.sourceView._dx, grid);
+            var ty = g.snapToGrid(position.y, grid) - position.y + g.snapToGrid(localPoint.y - this.sourceView._dy, grid);
+            this.sourceView._dx = g.snapToGrid(localPoint.x, grid);
+            this.sourceView._dy = g.snapToGrid(localPoint.y, grid);
 
-
-            this.sourceView.pointermove(evt,localPoint.x,localPoint.y);
+            _.each(this.moving_set, function (view) {
+                view.pointermove(evt,tx,ty);
+            });
+           // this.sourceView.pointermove(evt,localPoint.x,localPoint.y);
         }else{
             this.trigger('blank:pointermove', evt, localPoint.x, localPoint.y);
         }
@@ -385,6 +422,30 @@ org.dedu.draw.Paper = Backbone.View.extend({
 
             this.trigger('blank:pointerup', evt, localPoint.x, localPoint.y);
         }
+    },
+
+
+    updateSelection: function () {
+        this.unfocus();
+        if(this.moving_set.length>0){
+            this.moving_set.map(function(view){view.focus()});
+        }
+    },
+    
+    focus: function () {
+        if (this.moving_set.length > 0) {
+            this.unfocus();
+            _.each(this.moving_set, function (view) {
+                view.focus();
+            })
+        }
+
+    },
+
+    unfocus: function () {
+        _.each(this._views, function (view) {
+            view.unfocus();
+        })
     },
 
     setOrigin:function(ox,oy) {

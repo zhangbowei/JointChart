@@ -11,7 +11,8 @@ org.dedu.draw.Element = org.dedu.draw.Cell.extend({
             width: 1,
             height: 1
         },
-        angle: 0
+        angle: 0,
+        selected:false
     },
 
     position:function(x,y,opt){
@@ -90,7 +91,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         this.listenTo(this.model, 'change:size', this.resize);
         this.listenTo(this.model, 'change:angle', this.rotate);
 
-        this.listenTo(this.options.paper, "blank:pointerdown", this.unfocus);
+
     },
 
     render:function(){
@@ -512,6 +513,14 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         this.update();
     },
 
+    focus: function () {
+        this.model.set('selected',true);
+    },
+
+    unfocus:function(){
+        this.model.set('selected',false);
+    },
+
 
     pointerdown:function(evt,x,y){
         var paper = this.paper;
@@ -541,7 +550,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         }else{
             this._dx = x;
             this._dy = y;
-            this.focus();
+
 
             this.restrictedArea = paper.getRestrictedArea(this);
             org.dedu.draw.CellView.prototype.pointerdown.apply(this, arguments);
@@ -550,29 +559,29 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
     },
 
     
-    pointermove:function(evt,x,y){
+    pointermove:function(evt,tx,ty){
         if(this._linkView){
             // let the linkview deal with this event
-            this._linkView.pointermove(evt, x, y);
+            this._linkView.pointermove(evt, evt.clientX, evt.clientY );
         }else{
             var grid = this.paper.options.gridSize;
             var interactive = _.isFunction(this.options.interactive) ? this.options.interactive(this, 'pointermove') : this.options.interactive;
             if (interactive !== false) {
-                var position = this.model.get('position');
+                //var position = this.model.get('position');
                 // Make sure the new element's position always snaps to the current grid after
                 // translate as the previous one could be calculated with a different grid size.
-                var tx = g.snapToGrid(position.x, grid) - position.x + g.snapToGrid(x - this._dx, grid);
-                var ty = g.snapToGrid(position.y, grid) - position.y + g.snapToGrid(y - this._dy, grid);
+                //var tx = g.snapToGrid(position.x, grid) - position.x + g.snapToGrid(x - this._dx, grid);
+                //var ty = g.snapToGrid(position.y, grid) - position.y + g.snapToGrid(y - this._dy, grid);
 
                 this.model.translate(tx, ty, {
                     restrictedArea: this.restrictedArea,
                     ui: true
                 });
             }
-            this._dx = g.snapToGrid(x, grid);
-            this._dy = g.snapToGrid(y, grid);
+            //this._dx = g.snapToGrid(x, grid);
+            //this._dy = g.snapToGrid(y, grid);
             org.dedu.draw.CellView.prototype.pointermove.apply(this, arguments);
-            this.notify('element:pointermove', evt, x, y);
+            this.notify('element:pointermove', evt, tx, ty);
         }
     },
 
