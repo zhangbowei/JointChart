@@ -85,7 +85,6 @@ org.dedu.draw.Cell = Backbone.Model.extend({
             // nested objects by the colon character.
             args[0] = 'attrs/' + attrs;
         }else{
-
             args[0] = {'attrs':attrs};
         }
         return this.prop.apply(this,args);
@@ -108,7 +107,45 @@ org.dedu.draw.Cell = Backbone.Model.extend({
             // Get/set an attribute by a special path syntax that delimits
             // nested objects by the colon character.
             if (arguments.length > 1) {
+                var path = props;
+                var pathArray = path.split('/');
+                var property = pathArray[0];
 
+                // Remove the top-level property from the array of properties.
+                pathArray.shift();
+
+                opt = opt || {};
+                opt.propertyPath = path;
+                opt.propertyValue = value;
+
+                if (pathArray.length === 0) {
+                    // Property is not nested. We can simply use `set()`.
+                    return this.set(property, value, opt);
+                }
+
+                var update = {};
+                // Initialize the nested object. Subobjects are either arrays or objects.
+                // An empty array is created if the sub-key is an integer. Otherwise, an empty object is created.
+                // Note that this imposes a limitation on object keys one can use with Inspector.
+                // Pure integer keys will cause issues and are therefore not allowed.
+                var initializer = update;
+                var prevProperty = property;
+                _.each(pathArray, function(key) {
+                    initializer = initializer[prevProperty] = (_.isFinite(Number(key)) ? [] : {});
+                    prevProperty = key;
+                });
+                // Fill update with the `value` on `path`.
+                update = org.dedu.draw.util.setByPath(update, path, value, '/');
+
+                var baseAttributes = _.merge({}, this.attributes);
+                // if rewrite mode enabled, we replace value referenced by path with
+                // the new one (we don't merge).
+                opt.rewrite && org.dedu.draw.util.unsetByPath(baseAttributes, path, '/');
+
+                // Merge update with the model attributes.
+                var attributes = _.merge(baseAttributes, update);
+                // Finally, set the property to the updated attributes.
+                return this.set(property, attributes[property], opt);
             }else{
                 return org.dedu.draw.util.getByPath(this.attributes, props, delim);
             }

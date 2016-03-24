@@ -650,9 +650,6 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
             this.unhighlight('connection_line');
             this.focus = false;
         }
-
-        console.log('asdfa')
-
     },
 
     remove: function () {
@@ -684,7 +681,68 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         switch (this._action) {
             case 'arrowhead-move':
                 if (this.paper.options.snapLinks) {
+                    var r = this.paper.options.snapLinks.radius || 50;
+                    var viewsInArea = this.paper.findViewsInArea({ x: x - r, y: y - r, width: 2 * r, height: 2 * r });
 
+                    this._closestView && this._closestView.unhighlight(this._closestEnd.selector, { connecting: true, snapping: true });
+                    this._closestView = this._closestEnd = null;
+
+                    var distance;
+                    var minDistance = Number.MAX_VALUE;
+                    var pointer = g.point(x, y);
+
+                    _.each(viewsInArea, function(view) {
+
+                        // skip connecting to the element in case '.': { magnet: false } attribute present
+                        if (view.el.getAttribute('magnet') !== 'false') {
+
+                            // find distance from the center of the model to pointer coordinates
+                            distance = view.model.getBBox().center().distance(pointer);
+
+                            // the connection is looked up in a circle area by `distance < r`
+                            if (distance < r && distance < minDistance) {
+
+                                if (this.paper.options.validateConnection.apply(
+                                        this.paper, this._validateConnectionArgs(view, null)
+                                    )) {
+                                    minDistance = distance;
+                                    this._closestView = view;
+                                    this._closestEnd = { id: view.model.id };
+                                }
+                            }
+                        }
+
+                        view.$('[magnet]').each(_.bind(function(index, magnet) {
+
+                            var bbox = V(magnet).bbox(false, this.paper.viewport);
+
+                            distance = pointer.distance({
+                                x: bbox.x + bbox.width / 2,
+                                y: bbox.y + bbox.height / 2
+                            });
+
+                            if (distance < r && distance < minDistance) {
+
+                                if (this.paper.options.validateConnection.apply(
+                                        this.paper, this._validateConnectionArgs(view, magnet)
+                                    )) {
+                                    minDistance = distance;
+                                    this._closestView = view;
+                                    this._closestEnd = {
+                                        id: view.model.id,
+                                        selector: view.getSelector(magnet),
+                                        port: magnet.getAttribute('port')
+                                    };
+                                }
+                            }
+
+                        }, this));
+
+                    }, this);
+
+                    this._closestView && this._closestView.highlight(this._closestEnd.selector, { connecting: true, snapping: true });
+
+                    this.model.set(this._arrowhead, this._closestEnd || { x: x, y: y }, { ui: true });
                 }else{
                     // checking views right under the pointer
 
@@ -706,10 +764,13 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
                                     this.paper,
                                     this._validateConnectionArgs(this._viewUnderPointer, this._magnetUnderPointer)
                                 )) {
+
                                 // If there was no magnet found, do not highlight anything and assume there
                                 // is no view under pointer we're interested in reconnecting to.
                                 // This can only happen if the overall element has the attribute `'.': { magnet: false }`.
                                 this._magnetUnderPointer && this._viewUnderPointer.highlight(this._magnetUnderPointer, { connecting: true });
+                            }else if(V(target).hasClass("tip")){
+                                console.log("collaspe");
                             } else {
                                 // This type of connection is not valid. Disregard this magnet.
                                 this._magnetUnderPointer = null;
@@ -740,7 +801,9 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
             var arrowhead = this._arrowhead;
 
             if (paperOptions.snapLinks) {
-
+                // Finish off link snapping. Everything except view unhighlighting was already done on pointermove.
+                this._closestView && this._closestView.unhighlight(this._closestEnd.selector, { connecting: true, snapping: true });
+                this._closestView = this._closestEnd = null;
             }else{
                 var viewUnderPointer = this._viewUnderPointer;
                 var magnetUnderPointer = this._magnetUnderPointer;

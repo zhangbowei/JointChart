@@ -14,7 +14,7 @@ org.dedu.draw.Paper = Backbone.View.extend({
             labelMove: false
         },
 
-        snapLinks: false, // false, true, { radius: value }
+        snapLinks: { radius: 30 }, // false, true, { radius: value }
         // Marks all available magnets with 'available-magnet' class name and all available cells with
         // 'available-cell' class name. Marks them when dragging a link is started and unmark
         // when the dragging is stopped.
@@ -161,6 +161,21 @@ org.dedu.draw.Paper = Backbone.View.extend({
 
         return this._views[id];
     },
+
+    // Find all views in given area
+    findViewsInArea: function(rect, opt) {
+
+        opt = _.defaults(opt || {}, { strict: false });
+        rect = g.rect(rect);
+
+        var views = _.map(this.model.getElements(), this.findViewByModel, this);
+        var method = opt.strict ? 'containsRect' : 'intersect';
+
+        return _.filter(views, function(view) {
+            return view && rect[method](g.rect(view.vel.bbox(false, this.viewport)));
+        }, this);
+    },
+
 
     getModelById:function(id){
 

@@ -4,11 +4,11 @@ org.dedu.draw.shape.basic.Generic = org.dedu.draw.Element.extend({
     defaults:org.dedu.draw.util.deepSupplement({
         type:'basic.Generic',
         attrs:{
-            '.':{fill:'#fff',stroke:'none'},
+            '.':{fill:'#fff',stroke:'none',magnet:false},
             text: {
                 'pointer-events': 'none',
                 'stroke':'none'
-            }
+            },
         }
     },org.dedu.draw.Element.prototype.defaults)
 });

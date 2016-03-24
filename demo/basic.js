@@ -79,7 +79,26 @@ var m3 = new org.dedu.draw.shape.devs.Model({
 });
 graph.addCell(m3);
 
+var state1 = new org.dedu.draw.shape.uml.State({
+    position: { x: 250, y: 150 },
+    size: { width: 90, height: 45 },
+})
 
+graph.addCell(state1);
+
+var simple = new org.dedu.draw.shape.simple.Generic({
+    position: { x: 250, y: 450 },
+    size: { width: 90, height: 45 },
+})
+
+graph.addCell(simple);
+
+var simple2 = new org.dedu.draw.shape.simple.Generic({
+    position: { x: 350, y: 350 },
+    size: { width: 90, height: 45 },
+})
+
+graph.addCell(simple2);
 //var link1 = new org.dedu.draw.Link({
 //    source:{id:m1.id},
 //    target:{id:m2.id}

@@ -440,7 +440,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         }
         if (isFinite(refY)) {
 
-            if (refXPercentage || refY > 0 && refY < 1) {
+            if (refYPercentage || refY > 0 && refY < 1) {
 
                 ty = bbox.y + bbox.height * refY;
 
@@ -521,24 +521,69 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         this.model.set('selected',false);
     },
 
+    findMagnetsInArea:function(rect, opt) {
+        rect = g.rect(rect);
+        var views = [this.up,this.down,this.left,this.right];
+
+    //    console.log(this.up.bbox(false,this.paper.viewport));
+
+        return _.filter(views,function(view){
+            return view && rect.intersect(g.rect(view.bbox(false,this.paper.viewport)));
+        },this);
+    },
+
 
     pointerdown:function(evt,x,y){
         var paper = this.paper;
 
+        var r = 3;
+        var viewsInArea = this.findMagnetsInArea({ x: x - r, y: y - r, width: 2 * r, height: 2 * r });
+
+        var distance;
+        var minDistance = Number.MAX_VALUE;
+        var pointer = g.point(x, y);
+
+        _.each(viewsInArea, function(view) {
+            if (view.attr('magnet') !== 'false') {
+                // find distance from the center of the model to pointer coordinates
+                distance = g.rect(view.bbox(false,this.paper.viewport)).center().distance(pointer);
+
+                // the connection is looked up in a circle area by `distance < r`
+                if (distance < r && distance < minDistance) {
+                    minDistance = distance;
+                    this._closestView = view;
+                   // this._closestEnd = { id: view.model.id };
+
+                }
+            }
+        },this);
+
         // target is a valid magnet start linking
-        if(evt.target.getAttribute('magnet') && paper.options.validateMagnet.call(paper, this, evt.target)){
+         if(this._closestView || evt.target.getAttribute('magnet') && paper.options.validateMagnet.call(paper, this, evt.target)){
             //this.model.trigger('batch:start', { batchName: 'add-link' });
 
             var link = paper.getDefaultLink(this, evt.target);
 
-            link.set({
-                source: {
-                    id: this.model.id,
-                    selector: this.getSelector(evt.target),
-                    port: evt.target.getAttribute('port')
-                },
-                target: { x: x, y: y }
-            });
+             if(this._closestView){
+                 link.set({
+                     source: {
+                         id: this.model.id,
+                         selector: this.getSelector(this._closestView.node),
+                         port: evt.target.getAttribute('port')
+                     },
+                     target: { x: x, y: y }
+                 });
+             }else{
+                 link.set({
+                     source: {
+                         id: this.model.id,
+                         selector: this.getSelector(evt.target),
+                         port: evt.target.getAttribute('port')
+                     },
+                     target: { x: x, y: y }
+                 });
+             }
+
 
             paper.model.addCell(link);
 
@@ -556,6 +601,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
             org.dedu.draw.CellView.prototype.pointerdown.apply(this, arguments);
             this.notify('element:pointerdown', evt, x, y);
         }
+        this._closestView = null;
     },
 
     
@@ -578,6 +624,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
                     ui: true
                 });
             }
+
             //this._dx = g.snapToGrid(x, grid);
             //this._dy = g.snapToGrid(y, grid);
             org.dedu.draw.CellView.prototype.pointermove.apply(this, arguments);
