@@ -513,13 +513,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         this.update();
     },
 
-    focus: function () {
-        this.model.set('selected',true);
-    },
 
-    unfocus:function(){
-        this.model.set('selected',false);
-    },
 
     findMagnetsInArea:function(rect, opt) {
         rect = g.rect(rect);

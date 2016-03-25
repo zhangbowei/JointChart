@@ -383,14 +383,16 @@ org.dedu.draw.Paper = Backbone.View.extend({
         var localPoint = this.snapToGrid({ x: evt.clientX, y: evt.clientY });
         if(view){
             if(this.guard(evt,view)) return;
-            this.sourceView = view;
-            this.sourceView.pointerdown(evt, localPoint.x, localPoint.y);
-
             if(!view.model.get('selected')){
                 this.moving_set = [];
                 this.moving_set.push(view);
             }
             this.focus();
+
+            this.sourceView = view;
+            this.sourceView.pointerdown(evt, localPoint.x, localPoint.y);
+
+
         }else{
             this.trigger('blank:pointerdown', evt, localPoint.x, localPoint.y);
         }

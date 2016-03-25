@@ -68,11 +68,11 @@ org.dedu.draw.shape.devs.ModelView = org.dedu.draw.ElementView.extend(
         org.dedu.draw.shape.basic.PortsViewInterface,
         {
             focus: function () {
-                org.dedu.draw.ElementView.prototype.focus.apply(this);
+                org.dedu.draw.CellView.prototype.focus.apply(this);
                 this.vel.findOne('.body').addClass('selected');
             },
             unfocus:function(){
-                org.dedu.draw.ElementView.prototype.unfocus.apply(this);
+                org.dedu.draw.CellView.prototype.unfocus.apply(this);
                 this.vel.findOne('.body').removeClass('selected');
             }
         })

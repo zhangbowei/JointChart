@@ -33,7 +33,6 @@ org.dedu.draw.Link = org.dedu.draw.Cell.extend({
         target: {}
     },
 
-
     isLink: function() {
 
         return true;
@@ -62,10 +61,12 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         // keeps markers bboxes and positions again for quicker access
         this._markerCache = {};
 
-        this.listenTo(this.options.paper, "blank:pointerdown", this.unfocus);
+        //this.listenTo(this.options.paper, "blank:pointerdown", this.unfocus);
 
         // bind events
         this.startListening();
+
+
 
     },
 
@@ -321,13 +322,11 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         this._V.connection_background.attr({'d':pathData});
         this._V.connection_outline.attr({'d':pathData});
         this._V.connection_line.attr({'d':pathData});
-        if(this.focus){
+        if(this.model.get('selected')){
             this._V.connection_line.attr({'stroke': '#ff7f0e'});
         }else{
             this._V.connection_line.attr({'stroke': '#888'});
         }
-
-
     },
 
     findRoute: function (oldVertices) {
@@ -642,14 +641,17 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
 
     highlight: function (el) {
         this._V[el].attr({'stroke':'#ff7f0e'});
-        this.focus = true;
+    },
+
+    focus: function () {
+        org.dedu.draw.CellView.prototype.focus.apply(this);
+        console.log(this.model.get('selected'));
+        this.highlight('connection_line');
     },
 
     unfocus: function () {
-        if(this.focus){
-            this.unhighlight('connection_line');
-            this.focus = false;
-        }
+        org.dedu.draw.CellView.prototype.unfocus.apply(this);
+        this.unhighlight('connection_line');
     },
 
     remove: function () {
@@ -672,7 +674,7 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
 
 
         var targetParentEvent = evt.target.parentNode.getAttribute('event');
-        this.highlight('connection_line');
+        this.focus();
 
     },
 
@@ -824,12 +826,13 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
                     if (selector != null) arrowheadValue.port = port;
                     if (port != null) arrowheadValue.selector = selector;
                     this.model.set(arrowhead, arrowheadValue, { ui: true });
-                    this._afterArrowheadMove();
+
                 }else{
                     this.remove();
                 }
 
             }
+            this._afterArrowheadMove();
         }
 
         delete this._action;

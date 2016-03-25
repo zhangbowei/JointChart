@@ -416,6 +416,14 @@ org.dedu.draw.CellView = Backbone.View.extend({
         return this;
     },
 
+    focus: function () {
+        this.model.set('selected',true);
+    },
+
+    unfocus:function(){
+        this.model.set('selected',false);
+    },
+
     // Find the closest element that has the `magnet` attribute set to `true`. If there was not such
     // an element found, return the root element of the cell view.
     findMagnet: function (el) {

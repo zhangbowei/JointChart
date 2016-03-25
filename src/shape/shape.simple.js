@@ -131,6 +131,14 @@ org.dedu.draw.shape.simple.GenericView = org.dedu.draw.ElementView.extend(
             if($(".tip-"+port.attr('port'),this.$el)[0]){
                 $(".tip.tip-"+port.attr('port'),this.$el).remove();
             }
+        },
+        focus: function () {
+            org.dedu.draw.CellView.prototype.focus.apply(this);
+            this.vel.findOne('.body').addClass('selected');
+        },
+        unfocus:function(){
+            org.dedu.draw.CellView.prototype.unfocus.apply(this);
+            this.vel.findOne('.body').removeClass('selected');
         }
     })
 );
