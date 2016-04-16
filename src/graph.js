@@ -56,9 +56,12 @@ org.dedu.draw.Graph = Backbone.Model.extend({
         // [edge ID] -> true
         this._edges = {};
 
+        this.selectionSet = [];//user select much elements
+
         cells.on('add', this._restructureOnAdd, this);
         cells.on('remove', this._restructureOnRemove, this);
     },
+
 
     _restructureOnAdd: function(cell) {
 
@@ -94,6 +97,38 @@ org.dedu.draw.Graph = Backbone.Model.extend({
         }
     },
 
+    selectAll:function(){
+
+        this.get('cells').models.forEach(function(model){
+            model.focus();
+        });
+        this.selectionSet = this.get('cells').models;
+    },
+
+    updateSelection: function (selection_models_new) {
+        var selection_models = _.difference(this.selectionSet,selection_models_new);
+        selection_models.forEach(function(model){
+            model.focus();
+        });
+        this.selectionSet = selection_models_new;
+    },
+
+    cancelSelection: function (model_array) {
+        var selection_models = _.difference(this.selectionSet,model_array);
+        selection_models.forEach(function(model){
+            model.unfocus();
+        });
+        this.selectionSet = [];
+    },
+
+    focus:function(model){
+        if(this.selectionSet.indexOf(model)==-1){
+            this.cancelSelection([model]);
+            model.focus();
+            this.selectionSet.push(model);
+        }
+    },
+
 
     addCell:function(cell,options){
         this.get('cells').add(this._prepareCell(cell), options || {});
@@ -103,6 +138,12 @@ org.dedu.draw.Graph = Backbone.Model.extend({
 
     _prepareCell:function(cell){
         return cell;
+    },
+
+
+
+    removeSection: function () {
+        this.get('cells').remove(this.selectionSet);
     },
 
     // Get a cell by `id`.

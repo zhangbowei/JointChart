@@ -89,7 +89,6 @@ org.dedu.draw.Paper = Backbone.View.extend({
         this.vis = V('g').addClass("vis").node;
         this.outer_background = V('rect').node;
 
-
         this.defs = V('defs').node;
 
         V(this.svg).append([this.viewport,this.defs]);
@@ -102,7 +101,7 @@ org.dedu.draw.Paper = Backbone.View.extend({
         this.listenTo(this.model, 'reset', this.resetViews);
         this.listenTo(this.model, 'sort', this.sortViews);
 
-        this.moving_set = [];//mush views move together
+
 
 
         this.setOrigin();
@@ -283,7 +282,7 @@ org.dedu.draw.Paper = Backbone.View.extend({
 
 
     blank_pointDown:function(evt,x,y){
-        this.unfocus();
+        this.model.cancelSelection();
 
         var lasso = this.lasso;
         var mouse_mode = this.mouse_mode;
@@ -346,13 +345,15 @@ org.dedu.draw.Paper = Backbone.View.extend({
         var lasso = this.lasso;
         var mouse_mode = this.mouse_mode;
         if (lasso) {
-            this.moving_set = [];
+            this.model.selectionSet = [];
 
             var x = parseInt(lasso.attr("x"));
             var y = parseInt(lasso.attr("y"));
             var x2 = x + parseInt(lasso.attr("width"));
             var y2 = y + parseInt(lasso.attr("height"));
 
+
+            var selection_models = [];
             _.each(this._views, function (cellView) {
                 if(cellView instanceof org.dedu.draw.LinkView){
                     return;
@@ -362,17 +363,19 @@ org.dedu.draw.Paper = Backbone.View.extend({
 
                 model.set('selected',position.x>x && position.x<x2 && position.y>y && position.y<y2);
                 if(model.get('selected')){
-                    this.moving_set.push(cellView);
+                    selection_models.push(cellView.model);
                 }
 
             },this);
 
-            this.updateSelection();
+            this.model.updateSelection(selection_models);
 
             lasso.remove();
             lasso = null;
         }
+        this.trigger('paper:selection_create', evt);
     },
+
     canvasMouseDown:function(evt){
 
         evt.preventDefault();
@@ -383,12 +386,8 @@ org.dedu.draw.Paper = Backbone.View.extend({
         var localPoint = this.snapToGrid({ x: evt.clientX, y: evt.clientY });
         if(view){
             if(this.guard(evt,view)) return;
-            if(!view.model.get('selected')){
-                this.moving_set = [];
-                this.moving_set.push(view);
-            }
-            this.focus();
 
+            this.model.focus(view.model);
             this.sourceView = view;
             this.sourceView.pointerdown(evt, localPoint.x, localPoint.y);
 
@@ -396,6 +395,8 @@ org.dedu.draw.Paper = Backbone.View.extend({
         }else{
             this.trigger('blank:pointerdown', evt, localPoint.x, localPoint.y);
         }
+
+        this.trigger('paper:selection_create', evt);
     },
 
     canvasMouseMove:function(evt){
@@ -413,9 +414,9 @@ org.dedu.draw.Paper = Backbone.View.extend({
             this.sourceView._dx = g.snapToGrid(localPoint.x, grid);
             this.sourceView._dy = g.snapToGrid(localPoint.y, grid);
 
-            _.each(this.moving_set, function (view) {
-                view.pointermove(evt,tx,ty);
-            });
+            _.each(this.model.selectionSet, function (model) {
+                this.findViewByModel(model).pointermove(evt,tx,ty);
+            },this);
            // this.sourceView.pointermove(evt,localPoint.x,localPoint.y);
         }else{
             this.trigger('blank:pointermove', evt, localPoint.x, localPoint.y);
@@ -441,29 +442,6 @@ org.dedu.draw.Paper = Backbone.View.extend({
         }
     },
 
-
-    updateSelection: function () {
-        this.unfocus();
-        if(this.moving_set.length>0){
-            this.moving_set.map(function(view){view.focus()});
-        }
-    },
-    
-    focus: function () {
-        if (this.moving_set.length > 0) {
-            this.unfocus();
-            _.each(this.moving_set, function (view) {
-                view.focus();
-            })
-        }
-
-    },
-
-    unfocus: function () {
-        _.each(this._views, function (view) {
-            view.unfocus();
-        })
-    },
 
     setOrigin:function(ox,oy) {
         this.options.origin.x = ox || 0;

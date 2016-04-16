@@ -90,6 +90,14 @@ org.dedu.draw.shape.basic.PortsViewInterface = {
         // `Model` emits the `process:ports` whenever it's done configuring the `attrs` object for ports.
         this.listenTo(this.model, 'process:ports', this.update);
         org.dedu.draw.ElementView.prototype.initialize.apply(this, arguments);
+        this.model.on('change:selected',function(){
+            if(this.model.get("selected")){
+                this.focus();
+            }else{
+                this.unfocus();
+            }
+
+        },this);
     },
     update: function () {
         // First render ports so that `attrs` can be applied to those newly created DOM elements

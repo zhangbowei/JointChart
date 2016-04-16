@@ -164,12 +164,13 @@ org.dedu.draw.shape.node.ModelView = org.dedu.draw.shape.devs.ModelView.extend({
 
         return this;
     },
+
     focus: function () {
-        org.dedu.draw.ElementView.prototype.focus.apply(this);
+
         this.vel.findOne('.node').addClass('selected');
     },
     unfocus:function(){
-        org.dedu.draw.ElementView.prototype.unfocus.apply(this);
+
         this.vel.findOne('.node').removeClass('selected');
     }
 });

@@ -5,7 +5,7 @@
 org.dedu.draw.shape.uml = {
 };
 
-org.dedu.draw.shape.uml.State = org.dedu.draw.shape.devs.Model.extend({
+org.dedu.draw.shape.uml.State = org.dedu.draw.shape.simple.Generic.extend({
     markup: [
         '<g class="rotatable">',
         '<g class="scalable">',
@@ -43,7 +43,7 @@ org.dedu.draw.shape.uml.State = org.dedu.draw.shape.devs.Model.extend({
         name: 'State',
         events: []
 
-    }, org.dedu.draw.shape.devs.Model.prototype.defaults),
+    }, org.dedu.draw.shape.simple.Generic.prototype.defaults),
 
     initialize: function() {
 
@@ -57,7 +57,7 @@ org.dedu.draw.shape.uml.State = org.dedu.draw.shape.devs.Model.extend({
         this.updateEvents();
         this.updatePath();
 
-        org.dedu.draw.shape.basic.Generic.prototype.initialize.apply(this, arguments);
+        org.dedu.draw.shape.simple.Generic.prototype.initialize.apply(this, arguments);
     },
     updateName: function() {
 
@@ -83,15 +83,15 @@ org.dedu.draw.shape.uml.State = org.dedu.draw.shape.devs.Model.extend({
 
 });
 
-org.dedu.draw.shape.uml.StateView = org.dedu.draw.ElementView.extend({
+org.dedu.draw.shape.uml.StateView = org.dedu.draw.shape.simple.GenericView.extend({
     focus: function () {
-        org.dedu.draw.ElementView.prototype.focus.apply(this);
+
         this.vel.findOne('.uml-state-body').attr({
             fill:"#ffc21d"
         });
     },
     unfocus:function(){
-        org.dedu.draw.ElementView.prototype.unfocus.apply(this);
+
         this.vel.findOne('.uml-state-body').attr({
             fill:"#fff9ca"
         });

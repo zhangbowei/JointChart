@@ -261,6 +261,14 @@ org.dedu.draw.Cell = Backbone.Model.extend({
         return this;
     },
 
+    focus: function () {
+        this.set('selected',true);
+    },
+
+    unfocus:function(){
+        this.set('selected',false);
+    },
+
     // Isolated cloning. Isolated cloning has two versions: shallow and deep (pass `{ deep: true }` in `opt`).
     // Shallow cloning simply clones the cell and returns a new cell with different ID.
     // Deep cloning clones the cell and all its embedded cells recursively.
@@ -416,13 +424,7 @@ org.dedu.draw.CellView = Backbone.View.extend({
         return this;
     },
 
-    focus: function () {
-        this.model.set('selected',true);
-    },
 
-    unfocus:function(){
-        this.model.set('selected',false);
-    },
 
     // Find the closest element that has the `magnet` attribute set to `true`. If there was not such
     // an element found, return the root element of the cell view.

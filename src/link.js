@@ -66,8 +66,14 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         // bind events
         this.startListening();
 
+        this.model.on('change:selected',function(){
+            if(this.model.get("selected")){
+                this.focus();
+            }else{
+                this.unfocus();
+            }
 
-
+        },this);
     },
 
     // Returns a function observing changes on an end of the link. If a change happens and new end is a new model,
@@ -644,13 +650,13 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
     },
 
     focus: function () {
-        org.dedu.draw.CellView.prototype.focus.apply(this);
+        //org.dedu.draw.CellView.prototype.focus.apply(this);
         console.log(this.model.get('selected'));
         this.highlight('connection_line');
     },
 
     unfocus: function () {
-        org.dedu.draw.CellView.prototype.unfocus.apply(this);
+        //org.dedu.draw.CellView.prototype.unfocus.apply(this);
         this.unhighlight('connection_line');
     },
 

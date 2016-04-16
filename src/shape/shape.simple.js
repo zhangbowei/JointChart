@@ -6,6 +6,7 @@ org.dedu.draw.shape.simple = {};
 
 org.dedu.draw.shape.simple.PortsModelInterface = {
     initialize:function(){
+
     },
     updatePortsAttrs: function (eventName) {
 
@@ -28,6 +29,14 @@ org.dedu.draw.shape.simple.SuspendPortViewInterface = {
 
         this.on('cell:highlight',this.addTipMagnet);
         this.on('cell:unhighlight',this.removeTipMagnet);
+        this.model.on('change:selected',function(){
+            if(this.model.get("selected")){
+                this.focus();
+            }else{
+                this.unfocus();
+            }
+
+        },this);
     },
     render:function(){
         org.dedu.draw.ElementView.prototype.render.apply(this, arguments);
@@ -133,11 +142,11 @@ org.dedu.draw.shape.simple.GenericView = org.dedu.draw.ElementView.extend(
             }
         },
         focus: function () {
-            org.dedu.draw.CellView.prototype.focus.apply(this);
+
             this.vel.findOne('.body').addClass('selected');
         },
         unfocus:function(){
-            org.dedu.draw.CellView.prototype.unfocus.apply(this);
+
             this.vel.findOne('.body').removeClass('selected');
         }
     })
