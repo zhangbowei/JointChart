@@ -1,6 +1,5 @@
 /test
 /node_modules
-/dist
 /.*/
 /.sass-cache
 /lib
