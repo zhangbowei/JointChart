@@ -423,7 +423,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         // Analogical rules apply for `refY`.
         if (isFinite(refX)) {
 
-            if (refXPercentage || refX > 0 && refX < 1) {
+            if (refXPercentage || Math.abs(refX) > 0 && Math.abs(refX) < 1) {
 
                 tx = bbox.x + bbox.width * refX;
 
@@ -440,7 +440,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         }
         if (isFinite(refY)) {
 
-            if (refYPercentage || refY > 0 && refY < 1) {
+            if (refYPercentage || Math.abs(refY) > 0 && Math.abs(refY) < 1) {
 
                 ty = bbox.y + bbox.height * refY;
 
@@ -599,10 +599,10 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
     },
 
     
-    pointermove:function(evt,tx,ty){
+    pointermove:function(evt,tx,ty,localPoint){
         if(this._linkView){
             // let the linkview deal with this event
-            this._linkView.pointermove(evt, evt.clientX, evt.clientY );
+            this._linkView.pointermove(evt, localPoint.x, localPoint.y );
         }else{
             var grid = this.paper.options.gridSize;
             var interactive = _.isFunction(this.options.interactive) ? this.options.interactive(this, 'pointermove') : this.options.interactive;

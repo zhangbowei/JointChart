@@ -4,11 +4,11 @@
     "shenmulmz <1206202883@qq.com>"
   ],
   "description": "",
-  "main": "joint_chart.js",
+  "main": "dist/joint_chart.js",
   "moduleType": [],
   "license": "MIT",
   "homepage": "",
-  "ignore": [".*/*","node_modules","bower_components","lib","test","sass","src","*.md","package.json","Gruntfile.js",".gitignore"],
+  "ignore": ["node_modules","bower_components","lib","test","sass","src","*.md","package.json","Gruntfile.js",".gitignore"],
   "dependencies": {
     "backbone": "~1.2.3",
     "lodash": "~4.5.0",

@@ -5,6 +5,89 @@
 org.dedu.draw.shape.uml = {
 };
 
+org.dedu.draw.shape.uml.StartState = org.dedu.draw.shape.simple.Generic.extend({
+    markup:[
+        '<g class="rotatable">',
+        '<g class="scalable">',
+        '<circle class="uml-start-state-body uml-state-body"/>',
+        '</g>',
+        '</g>'
+    ].join(''),
+
+    defaults: org.dedu.draw.util.deepSupplement({
+       type: 'uml.StartState', 
+       port_ref_position:{
+            portup:{
+                'ref-x':0,
+                'ref-y':-.5,
+            },
+            portright:{
+                'ref-x':.5,
+                'ref-y':0
+            },
+            portdown:{
+                'ref-x':0,
+                'ref-y':.5
+            },
+            portleft:{
+                'ref-x':-0.5,
+                'ref-y':0
+            }                        
+       },
+       attrs:{
+            '.uml-start-state-body':{
+                'r':20,
+                'stroke':'#333',
+                'fill':'#444'
+            }
+       }
+    }, org.dedu.draw.shape.simple.Generic.prototype.defaults)
+});
+
+org.dedu.draw.shape.uml.EndState = org.dedu.draw.shape.simple.Generic.extend({
+        markup: [
+            '<g class="rotatable">',
+            '<g class="scalable">',
+            '<circle class="uml-end-state-body uml-state-body" />',
+            '<circle class="uml-end-state-inner"/>',
+            '</g>',
+            '</g>'
+        ].join(''),
+        defaults: org.dedu.draw.util.deepSupplement({
+            type: 'uml.EndState', 
+            port_ref_position: {
+                portup: {
+                    'ref-x': 0,
+                    'ref-y': -.5,
+                },
+                portright: {
+                    'ref-x': .5,
+                    'ref-y': 0
+                },
+                portdown: {
+                    'ref-x': 0,
+                    'ref-y': .5
+                },
+                portleft: {
+                    'ref-x': -0.5,
+                    'ref-y': 0
+                }
+            },
+
+            attrs: {
+               '.uml-end-state-body': {
+                   'r': 20,
+                   'stroke': '#333'
+               },
+                '.uml-end-state-inner': {
+                   'r': 10,
+                   'stroke': '#333'
+               }
+            }
+       }, org.dedu.draw.shape.simple.Generic.prototype.defaults)
+});
+
+
 org.dedu.draw.shape.uml.State = org.dedu.draw.shape.simple.Generic.extend({
     markup: [
         '<g class="rotatable">',
@@ -83,17 +166,29 @@ org.dedu.draw.shape.uml.State = org.dedu.draw.shape.simple.Generic.extend({
 
 });
 
+
+
 org.dedu.draw.shape.uml.StateView = org.dedu.draw.shape.simple.GenericView.extend({
     focus: function () {
-
         this.vel.findOne('.uml-state-body').attr({
             fill:"#ffc21d"
         });
     },
     unfocus:function(){
-
         this.vel.findOne('.uml-state-body').attr({
             fill:"#fff9ca"
         });
     }
+});
+
+org.dedu.draw.shape.uml.StartStateView  = org.dedu.draw.shape.uml.StateView.extend({
+    unfocus: function () {
+        this.vel.findOne('.uml-state-body').attr({
+            fill:"#444"
+        });
+    },
+});
+
+org.dedu.draw.shape.uml.EndStateView  = org.dedu.draw.shape.uml.StateView.extend({
+
 });

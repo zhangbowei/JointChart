@@ -16,18 +16,18 @@ var json = '{"id":"30127b7.fcfed84","x":429,"y":487,"w":140,"z":"210d0848.def2f8
 var data = JSON.parse(json);
 var halo;
 
-//chart.on('cell:pointerdown',function(cellView){
+// chart.on('cell:pointerdown',function(cellView){
 //    if (cellView.model instanceof org.dedu.draw.Link) return;
 //    if(cellView.model.get('selected') && cellView.model.previous('selected') === false){
 //        if(!halo){
-//
+
 //            halo = new org.dedu.draw.plugins.Halo({cellView:cellView});
 //        }
-//
+
 //        halo.render({cellView:cellView});
 //    }
-//
-//});
+
+// });
 
 
 var rb = new org.dedu.draw.shape.basic.Rect({
@@ -86,6 +86,20 @@ var state1 = new org.dedu.draw.shape.uml.State({
 
 graph.addCell(state1);
 
+var start_state = new org.dedu.draw.shape.uml.StartState({
+    position: { x: 450, y: 150 },
+    size: { width: 30, height: 30 },
+});
+
+graph.addCell(start_state);
+
+var end_state = new org.dedu.draw.shape.uml.EndState({
+    position: { x: 450, y: 150 },
+    size: { width: 30, height: 30 },
+});
+
+graph.addCell(end_state);
+
 var simple = new org.dedu.draw.shape.simple.Generic({
     position: { x: 250, y: 450 },
     size: { width: 90, height: 45 },
@@ -99,6 +113,10 @@ var simple2 = new org.dedu.draw.shape.simple.Generic({
 })
 
 graph.addCell(simple2);
+
+
+
+
 //var link1 = new org.dedu.draw.Link({
 //    source:{id:m1.id},
 //    target:{id:m2.id}

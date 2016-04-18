@@ -44,7 +44,6 @@ org.dedu.draw.shape.simple.SuspendPortViewInterface = {
         this.update();
     },
 
-
     renderSuspendPort: function () {
 
         var suspendTemplate = _.template(this.model.suspendPortMarkup);
@@ -58,13 +57,25 @@ org.dedu.draw.shape.simple.SuspendPortViewInterface = {
         this.rotatableNode.append(this.down);
         this.rotatableNode.append(this.left);
 
-        this.model.attr({
-            '.suspend':{ref:'.body',r:3,display:'none'},
-            '.portup':{'ref-x':.5,'ref-y':0},
-            '.portright':{'ref-x':'100%','ref-y':.5},
-            '.portdown':{'ref-x':.5,'ref-y':'100%'},
-            '.portleft':{'ref-y':.5,'ref-x':0}
-        });
+        var port_ref_position = this.model.get('port_ref_position');
+        if(port_ref_position){
+            this.model.attr({
+                '.suspend':{ref:'.body',r:3,display:'none'},
+                '.portup':{'ref-x':port_ref_position.portup['ref-x'],'ref-y':port_ref_position.portup['ref-y']},
+                '.portright':{'ref-x':port_ref_position.portright['ref-x'],'ref-y':port_ref_position.portright['ref-y']},
+                '.portdown':{'ref-x':port_ref_position.portdown['ref-x'],'ref-y':port_ref_position.portdown['ref-y']},
+                '.portleft':{'ref-x':port_ref_position.portleft['ref-x'],'ref-y':port_ref_position.portleft['ref-y']}
+            });
+        }else{        
+            this.model.attr({
+                '.suspend':{ref:'.body',r:3,display:'none'},
+                '.portup':{'ref-x':.5,'ref-y':0},
+                '.portright':{'ref-x':'100%','ref-y':.5},
+                '.portdown':{'ref-x':.5,'ref-y':'100%'},
+                '.portleft':{'ref-y':.5,'ref-x':0}
+            });
+        }
+
 
         this.trigger('add:ports');
     },
@@ -101,7 +112,8 @@ org.dedu.draw.shape.simple.Generic = org.dedu.draw.shape.basic.Generic.extend(
                     },
                     '.suspend':{
                         magnet: true
-                    }
+                    },
+
                 }
             }, org.dedu.draw.shape.basic.Generic.prototype.defaults),
             getPortAttrs: function (portName,index,total,selector,type) {
@@ -142,11 +154,9 @@ org.dedu.draw.shape.simple.GenericView = org.dedu.draw.ElementView.extend(
             }
         },
         focus: function () {
-
             this.vel.findOne('.body').addClass('selected');
         },
         unfocus:function(){
-
             this.vel.findOne('.body').removeClass('selected');
         }
     })

@@ -415,7 +415,7 @@ org.dedu.draw.Paper = Backbone.View.extend({
             this.sourceView._dy = g.snapToGrid(localPoint.y, grid);
 
             _.each(this.model.selectionSet, function (model) {
-                this.findViewByModel(model).pointermove(evt,tx,ty);
+                this.findViewByModel(model).pointermove(evt,tx,ty,localPoint);
             },this);
            // this.sourceView.pointermove(evt,localPoint.x,localPoint.y);
         }else{
