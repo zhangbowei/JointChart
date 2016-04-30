@@ -12,7 +12,8 @@ org.dedu.draw.Element = org.dedu.draw.Cell.extend({
             height: 1
         },
         angle: 0,
-        selected:false
+        selected:false,
+
     },
 
     position:function(x,y,opt){
@@ -103,7 +104,6 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         if(this.renderView){
             this.renderView();//留给第三方拓展使用
         }
-
         this.update();
         this.resize();
         this.rotate();
@@ -562,21 +562,29 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
                  link.set({
                      source: {
                          id: this.model.id,
+                         redID:this.model.get('redID'),
                          selector: this.getSelector(this._closestView.node),
                          port: evt.target.getAttribute('port')
                      },
-                     target: { x: x, y: y }
                  });
              }else{
                  link.set({
                      source: {
                          id: this.model.id,
+                         redID:this.model.get('redID'),
                          selector: this.getSelector(evt.target),
                          port: evt.target.getAttribute('port')
                      },
-                     target: { x: x, y: y }
                  });
              }
+             link.set({
+                 target: { x: x, y: y },
+                 attrs: {
+                     '.marker-target': {
+                         d: 'M 10 0 L 0 5 L 10 10 z'
+                     }
+                 }
+             });
 
 
             paper.model.addCell(link);

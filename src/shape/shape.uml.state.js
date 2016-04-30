@@ -34,13 +34,13 @@ org.dedu.draw.shape.uml.StartState = org.dedu.draw.shape.simple.Generic.extend({
                 'ref-y':0
             }                        
        },
-       attrs:{
-            '.uml-start-state-body':{
-                'r':20,
-                'stroke':'#333',
-                'fill':'#444'
-            }
-       }
+       attrs: {
+           '.uml-start-state-body': {
+               'r': 20,
+               'stroke': '#333',
+               'fill': '#444'
+           }
+       },
     }, org.dedu.draw.shape.simple.Generic.prototype.defaults)
 });
 
@@ -107,68 +107,73 @@ org.dedu.draw.shape.uml.State = org.dedu.draw.shape.simple.Generic.extend({
         attrs: {
             '.uml-state-body': {
                 'width': 200, 'height': 100, 'rx': 10, 'ry': 10,
-                'fill': '#fff9ca', 'stroke': '#333', 'stroke-width': 3
-            },
-            '.uml-state-separator': {
-                'stroke': '#333', 'stroke-width': 2
+                'fill': '#fff9ca', 'stroke': '#333', 'stroke-width': 1
             },
             '.uml-state-name': {
                 'ref': '.uml-state-body', 'ref-x': .5, 'ref-y': 5, 'text-anchor': 'middle',
                 'fill': '#000000', 'font-family': 'Courier New', 'font-size': 16,
                 'font-weight':'bold'
             },
+            '.uml-state-separator': {
+                'stroke': '#333', 'stroke-width': 2
+            },
             '.uml-state-events': {
                 'ref': '.uml-state-separator', 'ref-x': 5, 'ref-y': 5,
-                'fill': '#000000', 'font-family': 'Courier New', 'font-size': 14
+                'fill': '#000000', 'font-family': 'Courier New', 'font-size': 14,
+                'display':'block'
             }
         },
 
-        name: 'State',
-        events: []
+        events: [],
+        name: 'State'
+    }, org.dedu.draw.shape.simple.Generic.prototype.defaults)
 
-    }, org.dedu.draw.shape.simple.Generic.prototype.defaults),
+});
 
-    initialize: function() {
+org.dedu.draw.shape.uml.StateView = org.dedu.draw.shape.simple.GenericView.extend({
 
-        this.on({
-            'change:name': this.updateName,
-            'change:events': this.updateEvents,
-            'change:size': this.updatePath
-        }, this);
+    initialize: function () {
+        this.model.on('change:name', this.updateName,this);
+        this.model.on('change:events', this.updateEvents,this);
+        this.model.on('change:size', this.updatePath,this);
+        org.dedu.draw.shape.simple.GenericView.prototype.initialize.apply(this,arguments);
+    },
 
+    render:function(){
+        org.dedu.draw.shape.simple.GenericView.prototype.render.apply(this,arguments);
+        this.originSize = this.model.get('size');
         this.updateName();
-        this.updateEvents();
         this.updatePath();
-
-        org.dedu.draw.shape.simple.Generic.prototype.initialize.apply(this, arguments);
-    },
-    updateName: function() {
-
-        this.attr('.uml-state-name/text', this.get('name'));
+        this.updateEvents();
     },
 
-    updateEvents: function() {
-
-        this.attr('.uml-state-events/text', this.get('events').join('\n'));
+    updateEvents: function () {
+        this.vel.findOne('.uml-state-events').text(this.model.get('events').join('\n'));
+        var $text = $(".uml-state-events",this.$el);
+        var textBbox = V($text[0]).bbox(true, this.$el);
+        var size = this.originSize;
+        this.model.set('size',{
+            width:size.width,
+            height:size.height+textBbox.height
+        });
+    },
+    updateName: function () {
+        this.vel.findOne('.uml-state-name').text(this.model.get('name'));
     },
 
-    updatePath: function() {
+    updatePath: function () {
 
-        var middle = this.get('size').height/5*3;
+        var $text = $(".uml-state-name",this.$el);
+        var textBbox = V($text[0]).bbox(true, this.$el);
 
-        var d = 'M 0 '+middle+' L ' + this.get('size').width + " "+middle;
+        var d = 'M 0 '+textBbox.height+' L ' + this.model.get('size').width + " "+textBbox.height;
 
         // We are using `silent: true` here because updatePath() is meant to be called
         // on resize and there's no need to to update the element twice (`change:size`
         // triggers also an update).
-        this.attr('.uml-state-separator/d', d, { silent: true });
-    }
+        this.vel.findOne('.uml-state-separator').attr('d', d);
+    },
 
-});
-
-
-
-org.dedu.draw.shape.uml.StateView = org.dedu.draw.shape.simple.GenericView.extend({
     focus: function () {
         this.vel.findOne('.uml-state-body').attr({
             fill:"#ffc21d"
@@ -178,17 +183,36 @@ org.dedu.draw.shape.uml.StateView = org.dedu.draw.shape.simple.GenericView.exten
         this.vel.findOne('.uml-state-body').attr({
             fill:"#fff9ca"
         });
+        this.hideSuspendPort();
     }
 });
 
-org.dedu.draw.shape.uml.StartStateView  = org.dedu.draw.shape.uml.StateView.extend({
+org.dedu.draw.shape.uml.StartStateView  = org.dedu.draw.shape.simple.GenericView.extend({
+
+    focus: function () {
+        this.vel.findOne('.uml-state-body').attr({
+            fill:"#ffc21d"
+        });
+    },
     unfocus: function () {
         this.vel.findOne('.uml-state-body').attr({
             fill:"#444"
         });
-    },
+        this.hideSuspendPort();
+    }
+
 });
 
-org.dedu.draw.shape.uml.EndStateView  = org.dedu.draw.shape.uml.StateView.extend({
-
+org.dedu.draw.shape.uml.EndStateView  = org.dedu.draw.shape.simple.GenericView.extend({
+    focus: function () {
+        this.vel.findOne('.uml-state-body').attr({
+            fill:"#ffc21d"
+        });
+    },
+    unfocus:function(){
+        this.vel.findOne('.uml-state-body').attr({
+            fill:"#fff9ca"
+        });
+        this.hideSuspendPort();
+    }
 });

@@ -1,5 +1,6 @@
 org.dedu.draw.Cell = Backbone.Model.extend({
 
+
     constructor:function(attributes,options){
         var defaults;
         var attrs = attributes || {};
@@ -11,6 +12,7 @@ org.dedu.draw.Cell = Backbone.Model.extend({
             attrs = _.merge({}, defaults, attrs);
             //</custom code>
         }
+        attrs.redID = attrs.redID || (1+Math.random()*4294967295).toString(16);  //be used by user program
         this.set(attrs, options);
         this.initialize.apply(this, arguments);
     },
@@ -404,7 +406,7 @@ org.dedu.draw.CellView = Backbone.View.extend({
     },
 
     highlight: function (el, opt) {
-        el = !el ? this.el : this.$(el)[0] || this.el;
+        el = !el ? this.el : $(el,$(this.el))[0] || this.el;
 
         // set partial flag if the highlighted element is not the entire view.
         opt = opt || {};
@@ -467,6 +469,15 @@ org.dedu.draw.CellView = Backbone.View.extend({
             this.paper.trigger.apply(this.paper, [evt, this].concat(args));
         }
     },
+
+    pointerdblclick: function(evt, x, y) {
+
+        this.notify('cell:pointerdblclick', evt, x, y);
+    },
+    pointerclick: function(evt, x, y) {
+        this.notify('cell:pointerclick', evt, x, y);
+    },
+
 
     mouseover: function(evt) {
 

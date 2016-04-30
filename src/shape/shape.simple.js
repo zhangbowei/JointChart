@@ -38,10 +38,10 @@ org.dedu.draw.shape.simple.SuspendPortViewInterface = {
 
         },this);
     },
-    render:function(){
-        org.dedu.draw.ElementView.prototype.render.apply(this, arguments);
+    renderView:function(){
+        //org.dedu.draw.ElementView.prototype.render.apply(this, arguments);
         this.renderSuspendPort();
-        this.update();
+        //this.update();
     },
 
     renderSuspendPort: function () {
@@ -145,19 +145,21 @@ org.dedu.draw.shape.simple.GenericView = org.dedu.draw.ElementView.extend(
                 this.rotatableNode.append(tip);
 
             }
-
+            this.showSuspendPort(); // show four ports
         },
         removeTipMagnet: function (el, opt) {
             var port = V(el);
             if($(".tip-"+port.attr('port'),this.$el)[0]){
                 $(".tip.tip-"+port.attr('port'),this.$el).remove();
             }
+            this.hideSuspendPort(); // hide four ports
         },
         focus: function () {
             this.vel.findOne('.body').addClass('selected');
         },
         unfocus:function(){
             this.vel.findOne('.body').removeClass('selected');
+            
         }
     })
 );

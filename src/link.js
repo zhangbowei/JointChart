@@ -6,24 +6,23 @@ org.dedu.draw.Link = org.dedu.draw.Cell.extend({
         '<path class="connection_line"/>',
         '<path class="marker-source" fill="black" stroke="black" />',
         '<path class="marker-target" fill="black" stroke="black" />',
-        '<path class="connection-wrap"/>',
+        // '<path class="connection-wrap"/>',
         '<g class="labels"/>',
-        '<g class="marker-vertices"/>',
-        '<g class="marker-arrowheads"/>',
-        '<g class="link-tools"/>'
+        // '<g class="marker-vertices"/>',
+         '<g class="marker-arrowheads"/>',
+        // '<g class="link-tools"/>'
     ].join(''),
 
+    labelMarkup: [
+        '<g class="label">',
+        '<rect />',
+        '<text />',
+        '</g>'
+    ].join(''),
 
-    // The default markup for showing/removing vertices. These elements are the children of the .marker-vertices element (see `this.markup`).
-    // Only .marker-vertex and .marker-vertex-remove element have special meaning. The former is used for
-    // dragging vertices (changin their position). The latter is used for removing vertices.
-    vertexMarkup: [
-        '<g class="marker-vertex-group" transform="translate(<%= x %>, <%= y %>)">',
-        '<circle class="marker-vertex" idx="<%= idx %>" r="10" />',
-        '<path class="marker-vertex-remove-area" idx="<%= idx %>" d="M16,5.333c-7.732,0-14,4.701-14,10.5c0,1.982,0.741,3.833,2.016,5.414L2,25.667l5.613-1.441c2.339,1.317,5.237,2.107,8.387,2.107c7.732,0,14-4.701,14-10.5C30,10.034,23.732,5.333,16,5.333z" transform="translate(5, -33)"/>',
-        '<path class="marker-vertex-remove" idx="<%= idx %>" transform="scale(.8) translate(9.5, -37)" d="M24.778,21.419 19.276,15.917 24.777,10.415 21.949,7.585 16.447,13.087 10.945,7.585 8.117,10.415 13.618,15.917 8.116,21.419 10.946,24.248 16.447,18.746 21.948,24.248z">',
-        '<title>Remove vertex.</title>',
-        '</path>',
+    arrowheadMarkup: [
+        '<g class="marker-arrowhead-group marker-arrowhead-group-<%= end %>">',
+        '<path class="marker-arrowhead" end="<%= end %>" d="M 26 0 L 0 13 L 26 26 z" />',
         '</g>'
     ].join(''),
 
@@ -57,6 +56,11 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
             this.constructor.prototype.watchSource = this.createWatcher("source");
             this.constructor.prototype.watchTarget = this.createWatcher("target");
         }
+
+        // `_.labelCache` is a mapping of indexes of labels in the `this.get('labels')` array to
+        // `<g class="label">` nodes wrapped by Vectorizer. This allows for quick access to the
+        // nodes in `updateLabelPosition()` in order to update the label positions.
+        this._labelCache = {};
 
         // keeps markers bboxes and positions again for quicker access
         this._markerCache = {};
@@ -246,8 +250,14 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         // Only the connection path is mandatory
         if (!this._V.connection_line) throw new Error('link: no connection path in the markup');
 
-        this.renderVertexMarkers();
+        // rendering labels has to be run after the link is appended to DOM tree. (otherwise <Text> bbox
+        // returns zero values)
+
+        this.renderArrowheadMarkers();
         this.vel.append(children);
+        // rendering labels has to be run after the link is appended to DOM tree. (otherwise <Text> bbox
+        // returns zero values)
+        this.renderLabels();
 
         // start watching the ends of the link for changes
         this.watchSource(this.model, this.model.get('source'))
@@ -257,23 +267,95 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         return this;
     },
 
-    renderVertexMarkers: function () {
+    renderLabels: function() {
 
-        if(!this._V.markerVertices) return this;
+        if (!this._V.labels) return this;
 
-        var $markerVertices = $(this._V.markerVertices.node).empty();
+        this._labelCache = {};
+        var $labels = $(this._V.labels.node).empty();
+
+        var labels = this.model.get('labels') || [];
+        if (!labels.length) return this;
+
+        var labelTemplate = _.template(this.model.get('labelMarkup') || this.model.labelMarkup);
+
+        // This is a prepared instance of a vectorized SVGDOM node for the label element resulting from
+        // compilation of the labelTemplate. The purpose is that all labels will just `clone()` this
+        // node to create a duplicate.
+        var labelNodeInstance = V(labelTemplate());
+
+        _.each(labels, function(label, idx) {
+
+            var labelNode = labelNodeInstance.clone().node;
+            V(labelNode).attr('label-idx', idx);
+
+            // Cache label nodes so that the `updateLabels()` can just update the label node positions.
+            this._labelCache[idx] = V(labelNode);
+
+            var $text = $(labelNode).find('text');
+            var $rect = $(labelNode).find('rect');
+
+            // Text attributes with the default `text-anchor` and font-size set.
+            var textAttributes = _.extend({ 'text-anchor': 'middle', 'font-size': 14 }, org.dedu.draw.util.getByPath(label, 'attrs/text', '/'));
+
+            $text.attr(_.omit(textAttributes, 'text'));
+            if (!_.isUndefined(textAttributes.text)) {
+
+                V($text[0]).text(textAttributes.text + '');
+            }
+            // Note that we first need to append the `<text>` element to the DOM in order to
+            // get its bounding box.
+            $labels.append(labelNode);
+
+            // `y-alignment` - center the text element around its y coordinate.
+            var textBbox = V($text[0]).bbox(true, $labels[0]);
+            V($text[0]).translate(0, -textBbox.height / 2);
+
+            // Add default values.
+            var rectAttributes = _.extend({
+
+                fill: 'white',
+                rx: 3,
+                ry: 3
+
+            }, org.dedu.draw.util.getByPath(label, 'attrs/rect', '/'));
+
+            $rect.attr(_.extend(rectAttributes, {
+                x: textBbox.x,
+                y: textBbox.y - textBbox.height / 2,  // Take into account the y-alignment translation.
+                width: textBbox.width,
+                height: textBbox.height
+            }));
+        }, this);
+
+        return this;        
+    },
+
+    renderArrowheadMarkers: function() {
+
+        // Custom markups might not have arrowhead markers. Therefore, jump of this function immediately if that's the case.
+        if (!this._V.markerArrowheads) return this;
+
+        var $markerArrowheads = $(this._V.markerArrowheads.node);
+
+        $markerArrowheads.empty();
 
         // A special markup can be given in the `properties.vertexMarkup` property. This might be handy
         // if default styling (elements) are not desired. This makes it possible to use any
         // SVG elements for .marker-vertex and .marker-vertex-remove tools.
-        var markupTemplate = _.template(this.model.get('vertexMarkup') || this.model.vertexMarkup);
+        var markupTemplate = _.template(this.model.get('arrowheadMarkup') || this.model.arrowheadMarkup);
 
-        _.each(this.model.get('vertices'), function (vertex, idx) {
-            $markerVertices.append(V(markupTemplate(_.extend({idx:idx},vertex))).node);
-        });
+        if(this.model.get('attrs')['.marker-source']){
+            this._V.sourceArrowhead = V(markupTemplate({ end: 'source' }));
+        }
+        if(this.model.get('attrs')['.marker-target']){
+            this._V.targetArrowhead = V(markupTemplate({ end: 'target' }));
+        }
+        $markerArrowheads.append(this._V.sourceArrowhead?this._V.sourceArrowhead.node:undefined, this._V.targetArrowhead?this._V.targetArrowhead.node:undefined);
 
         return this;
     },
+
 
     // Default is to process the `attrs` object and set attributes on subelements based on the selectors.
     update: function () {
@@ -312,9 +394,7 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
             }
 
             this.findBySelector(selector).attr(attrs);
-
         }, this);
-
 
         // Path finding
         var vertices = this.route = this.findRoute(this.model.get('vertices') || []);
@@ -328,12 +408,112 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         this._V.connection_background.attr({'d':pathData});
         this._V.connection_outline.attr({'d':pathData});
         this._V.connection_line.attr({'d':pathData});
+
+		this._translateAndAutoOrientArrows(this._V.markerSource, this._V.markerTarget);
+
+        this.updateLabelPositions();
+        this.updateArrowheadMarkers();
+
         if(this.model.get('selected')){
             this._V.connection_line.attr({'stroke': '#ff7f0e'});
         }else{
             this._V.connection_line.attr({'stroke': '#888'});
         }
     },
+
+    updateLabelPositions: function() {
+
+        if (!this._V.labels) return this;
+
+        var labels = this.model.get('labels') || [];
+        if(!labels.length) return this;
+
+        var connectionElement = this._V.connection_line.node;
+        var connectionLength = connectionElement.getTotalLength();
+
+        // Firefox returns connectionLength=NaN in odd cases (for bezier curves).
+        // In that case we won't update labels at all.
+        if (!_.isNaN(connectionLength)) {
+            var samples;
+
+            _.each(labels,function(label,idx){
+                var position = label.position;
+                var distance = _.isObject(position) ? position.distance : position;
+                var offset = _.isObject(position) ? position.offset : { x: 0, y: 0 };
+
+                distance = (distance > connectionLength) ? connectionLength : distance; // sanity check
+                distance = (distance < 0) ? connectionLength + distance : distance;
+                distance = (distance > 1) ? distance : connectionLength * distance;
+
+                var labelCoordinates = connectionElement.getPointAtLength(distance);
+
+                if (_.isObject(offset)) {
+
+                    // Just offset the label by the x,y provided in the offset object.
+                    labelCoordinates = g.point(labelCoordinates).offset(offset.x, offset.y);
+
+                } else if (_.isNumber(offset)) {
+                    if (!samples) {
+                        samples = this._samples || this._V.connection_line.sample(this.options.sampleInterval);
+                    }
+
+                    // Offset the label by the amount provided in `offset` to an either
+                    // side of the link.
+
+                    // 1. Find the closest sample & its left and right neighbours.
+                    var minSqDistance = Infinity;
+                    var closestSample;
+                    var closestSampleIndex;
+                    var p;
+                    var sqDistance;
+                    for (var i = 0, len = samples.length; i < len; i++) {
+                        p = samples[i];
+                        sqDistance = g.line(p, labelCoordinates).squaredLength();
+                        if (sqDistance < minSqDistance) {
+                            minSqDistance = sqDistance;
+                            closestSample = p;
+                            closestSampleIndex = i;
+                        }
+                    }
+                    var prevSample = samples[closestSampleIndex - 1];
+                    var nextSample = samples[closestSampleIndex + 1];
+
+                    // 2. Offset the label on the perpendicular line between
+                    // the current label coordinate ("at `distance`") and
+                    // the next sample.
+                    var angle = 0;
+                    if (nextSample) {
+                        angle = g.point(labelCoordinates).theta(nextSample);
+                    } else if (prevSample) {
+                        angle = g.point(prevSample).theta(labelCoordinates);
+                    }
+                    labelCoordinates = g.point(labelCoordinates).offset(offset).rotate(labelCoordinates, angle - 90);                                        
+                }                
+
+                this._labelCache[idx].attr('transform', 'translate(' + labelCoordinates.x + ', ' + labelCoordinates.y + ')');                                                
+            },this);
+        }                
+
+        return this;
+
+    },
+
+    updateArrowheadMarkers: function() {
+
+        if (!this._V.markerArrowheads) return this;
+
+        // getting bbox of an element with `display="none"` in IE9 ends up with access violation
+        if ($.css(this._V.markerArrowheads.node, 'display') === 'none') return this;
+
+        var sx = this.getConnectionLength() < this.options.shortLinkLength ? .5 : 1;
+        this._V.sourceArrowhead && this._V.sourceArrowhead.scale(sx);
+        this._V.targetArrowhead && this._V.targetArrowhead.scale(sx);
+
+        this._translateAndAutoOrientArrows(this._V.sourceArrowhead, this._V.targetArrowhead);
+
+        return this;
+    },
+
 
     findRoute: function (oldVertices) {
         var namespace = org.dedu.draw.routers;
@@ -389,6 +569,12 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
 
         return pathData;
     },
+
+    getConnectionLength: function() {
+
+        return this._V.connection_line.node.getTotalLength();
+    },
+
 
     _findConnectionPoints: function (vertices) {
         // cache source and target points
@@ -488,6 +674,15 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         this._beforeArrowheadMove();
     },
 
+    // Return `true` if the link is allowed to perform a certain UI `feature`.
+    // Example: `can('vertexMove')`, `can('labelMove')`.
+    can: function(feature) {
+
+        var interactive = _.isFunction(this.options.interactive) ? this.options.interactive(this, 'pointerdown') : this.options.interactive;
+        if (!_.isObject(interactive) || interactive[feature] !== false) return true;
+        return false;
+    },
+
     _createValidateConnectionArgs: function (arrowhead) {
         // It makes sure the arguments for validateConnection have the following form:
         // (source view, source magnet, target view, target magnet and link view)
@@ -522,6 +717,26 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         return validateConnectionArgs;
     },
 
+    _translateAndAutoOrientArrows: function(sourceArrow, targetArrow) {
+
+        // Make the markers "point" to their sticky points being auto-oriented towards
+        // `targetPosition`/`sourcePosition`. And do so only if there is a markup for them.
+        if (sourceArrow) {
+            sourceArrow.translateAndAutoOrient(
+                this.sourcePoint,
+                _.first(this.route) || this.targetPoint,
+                this.paper.viewport
+            );
+        }
+
+        if (targetArrow) {
+            targetArrow.translateAndAutoOrient(
+                this.targetPoint,
+                _.last(this.route) || this.sourcePoint,
+                this.paper.viewport
+            );
+        }
+    },
 
     // Find a point that is the start of the connection.
     // If `selectorOrPoint` is a point, then we're done and that point is the start of the connection.
@@ -651,7 +866,6 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
 
     focus: function () {
         //org.dedu.draw.CellView.prototype.focus.apply(this);
-        console.log(this.model.get('selected'));
         this.highlight('connection_line');
     },
 
@@ -675,8 +889,42 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         this._dx = x;
         this._dy = y;
 
+        // if are simulating pointerdown on a link during a magnet click, skip link interactions
+        if (evt.target.getAttribute('magnet') != null) return;
+
+        var interactive = _.isFunction(this.options.interactive) ? this.options.interactive(this, 'pointerdown') : this.options.interactive;
+        if (interactive === false) return;
+
         var className = evt.target.getAttribute('class');
         var parentClassName = evt.target.parentNode.getAttribute('class');
+        var labelNode;
+        if (parentClassName === 'label') {
+            className = parentClassName;
+            labelNode = evt.target.parentNode;
+        } else {
+            labelNode = evt.target;
+        }
+
+        switch (className) {
+            case 'marker-arrowhead':
+                if (this.can('arrowheadMove')) {
+                    this.startArrowheadMove(evt.target.getAttribute('end'));
+                }
+                break;
+
+            case 'label':
+                if (this.can('labelMove')) {
+                    this._action = 'label-move';
+                    this._labelIdx = parseInt(V(labelNode).attr('label-idx'), 10);
+                    // Precalculate samples so that we don't have to do that
+                    // over and over again while dragging the label.
+                    this._samples = this._V.connection.sample(1);
+                    this._linkLength = this._V.connection.node.getTotalLength();
+                }
+                break;
+
+
+        }
 
 
         var targetParentEvent = evt.target.parentNode.getAttribute('event');
@@ -738,6 +986,7 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
                                     this._closestView = view;
                                     this._closestEnd = {
                                         id: view.model.id,
+                                        redID:view.model.get('redID'),
                                         selector: view.getSelector(magnet),
                                         port: magnet.getAttribute('port')
                                     };
@@ -751,6 +1000,7 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
                     this._closestView && this._closestView.highlight(this._closestEnd.selector, { connecting: true, snapping: true });
 
                     this.model.set(this._arrowhead, this._closestEnd || { x: x, y: y }, { ui: true });
+
                 }else{
                     // checking views right under the pointer
 
@@ -811,6 +1061,7 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
             if (paperOptions.snapLinks) {
                 // Finish off link snapping. Everything except view unhighlighting was already done on pointermove.
                 this._closestView && this._closestView.unhighlight(this._closestEnd.selector, { connecting: true, snapping: true });
+                this._closestView && this.trigger.apply(this.model, ['link:complete']);
                 this._closestView = this._closestEnd = null;
             }else{
                 var viewUnderPointer = this._viewUnderPointer;
@@ -832,7 +1083,7 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
                     if (selector != null) arrowheadValue.port = port;
                     if (port != null) arrowheadValue.selector = selector;
                     this.model.set(arrowhead, arrowheadValue, { ui: true });
-
+                    this.trigger.apply(this.model, 'link:complete');
                 }else{
                     this.remove();
                 }
@@ -840,7 +1091,7 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
             }
             this._afterArrowheadMove();
         }
-
+    
         delete this._action;
         this.notify('link:pointerup', evt, x, y);
         org.dedu.draw.CellView.prototype.pointerup.apply(this, arguments);

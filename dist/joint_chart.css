@@ -68,3 +68,11 @@
 .suspend:hover{
     cursor:crosshair;
 }
+
+.marker-arrowheads {
+    opacity: 0;
+    cursor: move;
+    cursor: -webkit-grab;
+    cursor: -moz-grab;
+    /*   display: none;   */   /* setting `display: none` on .marker-arrowheads effectivelly switches of links reconnecting */
+}

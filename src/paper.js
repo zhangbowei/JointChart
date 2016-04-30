@@ -122,6 +122,8 @@ org.dedu.draw.Paper = Backbone.View.extend({
       "mousemove .vis":"canvasMouseMove",
       "mouseup .vis":"canvasMouseUp",
       "mouseover .element":"cellMouseover",
+        'dblclick': 'mousedblclick',
+        'click': 'mouseclick',
 
     },
 
@@ -383,6 +385,8 @@ org.dedu.draw.Paper = Backbone.View.extend({
         var evt = org.dedu.draw.util.normalizeEvent(evt);
         var view = this.findView(evt.target);
 
+        if (this.guard(evt, view)) return;
+
         var localPoint = this.snapToGrid({ x: evt.clientX, y: evt.clientY });
         if(view){
             if(this.guard(evt,view)) return;
@@ -405,6 +409,10 @@ org.dedu.draw.Paper = Backbone.View.extend({
         evt = org.dedu.draw.util.normalizeEvent(evt);
         var localPoint = this.snapToGrid({ x: evt.clientX, y: evt.clientY });
         if(this.sourceView){
+            if(this.sourceView instanceof org.dedu.draw.LinkView){
+                this.sourceView.pointermove(evt,localPoint.x,localPoint.y);
+                return;
+            }
             //Mouse moved counter.
             // this._mousemoved++;
             var grid = this.options.gridSize;
@@ -417,7 +425,7 @@ org.dedu.draw.Paper = Backbone.View.extend({
             _.each(this.model.selectionSet, function (model) {
                 this.findViewByModel(model).pointermove(evt,tx,ty,localPoint);
             },this);
-           // this.sourceView.pointermove(evt,localPoint.x,localPoint.y);
+
         }else{
             this.trigger('blank:pointermove', evt, localPoint.x, localPoint.y);
         }
@@ -462,12 +470,52 @@ org.dedu.draw.Paper = Backbone.View.extend({
            this.trigger('resize',width,height);
     },
 
-    mousedblclick:function(){
-        console.log("blclick~");
+    // Interaction.
+    // ------------
+
+    mousedblclick: function(evt) {
+
+        evt.preventDefault();
+        evt = org.dedu.draw.util.normalizeEvent(evt);
+
+        var view = this.findView(evt.target);
+        if (this.guard(evt, view)) return;
+
+        var localPoint = this.snapToGrid({ x: evt.clientX, y: evt.clientY });
+
+        if (view) {
+
+            view.pointerdblclick(evt, localPoint.x, localPoint.y);
+
+        } else {
+
+            this.trigger('blank:pointerdblclick', evt, localPoint.x, localPoint.y);
+        }
     },
 
-    mouseclick:function(){
-        console.log("click~");
+    mouseclick: function(evt) {
+
+        // Trigger event when mouse not moved.
+        if (this._mousemoved <= this.options.clickThreshold) {
+
+            evt = org.dedu.draw.util.normalizeEvent(evt);
+
+            var view = this.findView(evt.target);
+            if (this.guard(evt, view)) return;
+
+            var localPoint = this.snapToGrid({ x: evt.clientX, y: evt.clientY });
+
+            if (view) {
+
+                view.pointerclick(evt, localPoint.x, localPoint.y);
+
+            } else {
+
+                this.trigger('blank:pointerclick', evt, localPoint.x, localPoint.y);
+            }
+        }
+
+        this._mousemoved = 0;
     },
 
     pointermove:function(){
@@ -485,7 +533,7 @@ org.dedu.draw.Paper = Backbone.View.extend({
     },
 
     cellMouseover:function(evt){
-        console.log("cellMouseover");
+
         evt = org.dedu.draw.util.normalizeEvent(evt);
         var view = this.findView(evt.target);
         if(view){
@@ -499,8 +547,8 @@ org.dedu.draw.Paper = Backbone.View.extend({
     guard: function(evt, view) {
         if(view && view.model && (view.model instanceof org.dedu.draw.Cell)){
             return false;
-        }else if(1){
-
+        }else if (this.svg === evt.target || this.el === evt.target || $.contains(this.svg, evt.target)) {
+            return false;
         }
         return true; //Event guarded. Paper should not react on it in any way.
     },

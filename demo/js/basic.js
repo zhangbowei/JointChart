@@ -82,6 +82,7 @@ graph.addCell(m3);
 var state1 = new org.dedu.draw.shape.uml.State({
     position: { x: 250, y: 150 },
     size: { width: 90, height: 45 },
+    events:['enter','exit'],
 })
 
 graph.addCell(state1);
@@ -114,8 +115,34 @@ var simple2 = new org.dedu.draw.shape.simple.Generic({
 
 graph.addCell(simple2);
 
+var link6 = new org.dedu.draw.Link({
+
+    source: { id: m1.id },
+    target: { id: m2.id },
+    labels: [
+        { position: {distance:.5}, attrs: { text: { text: 'event1[condition1]/action1' } }},
+        // { position: { distance: .5, offset: { x: 20, y: 0 } }, attrs: { text: { text: 'Foo', fill: 'white', 'font-family': 'sans-serif' }, rect: { stroke: '#F39C12', 'stroke-width': 20, rx: 5, ry: 5 } }},
+        // { position: -10, attrs: { text: { text: '*' } }}
+    ],
+    attrs: {
+        '.marker-target': {
+            d: 'M 10 0 L 0 5 L 10 10 z'
+        }
+    }
+});
+//graph.addCell(link6);
 
 
+chart.on('cell:pointerdblclick',function(cellView){
+    if(cellView instanceof org.dedu.draw.shape.uml.StateView){
+        var event = prompt("please input event",'');
+        if (event!=null && event!=""){
+            var events = cellView.model.get('events');
+            events.push(event);
+            cellView.model.trigger('change:events');
+        }
+    }
+},chart);
 
 //var link1 = new org.dedu.draw.Link({
 //    source:{id:m1.id},

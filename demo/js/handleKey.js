@@ -8,8 +8,6 @@ chart.on("paper:selection_create",function(evt){
     }else{
         RED.keyboard.add(/* backspace */ 8,function(){deleteSelection();d3.event.preventDefault();});
     }
-
-    console.log("asdf");
 },chart);
 
 

@@ -81,7 +81,6 @@ org.dedu.draw.Graph = Backbone.Model.extend({
     },
 
     _restructureOnRemove: function(cell) {
-
         if (cell.isLink()) {
             delete this._edges[cell.id];
             var source = cell.get('source');
@@ -95,6 +94,27 @@ org.dedu.draw.Graph = Backbone.Model.extend({
         } else {
             delete this._nodes[cell.id];
         }
+    },
+
+
+    isExist:function(id){
+        var models = this.get('cells').models;
+        for(var i=0;i<models.length;i++){
+            if(models[i].get('redID')==id){
+                return true;
+            }
+        }
+        return false;
+    },
+
+    getCellByRedID:function(id) {
+        var models = this.get('cells').models;
+        for(var i in models){
+            if(models[i].get('redID') == id){
+                return models[i];
+            }
+        }
+
     },
 
     selectAll:function(){
@@ -132,7 +152,27 @@ org.dedu.draw.Graph = Backbone.Model.extend({
 
     addCell:function(cell,options){
         this.get('cells').add(this._prepareCell(cell), options || {});
-
+        var args ;
+        var self = this;
+        if(cell instanceof org.dedu.draw.Link){
+            cell.on('link:complete',function(){
+ 
+                args = {
+                    source: this.get('source'),
+                    target: this.get('target'),
+                    redID: this.get('redID'),
+                    type: 'link'
+                };
+                self.notify.apply(this,['node-red:node-link-added'].concat(args));
+            },cell);
+        }else if(cell instanceof org.dedu.draw.Element){
+            args = {
+                redID: cell.get('redID'),
+                type:'node'
+            };
+            this.notify.apply(this,['node-red:node-link-added'].concat(args));
+        }
+        
         return this;
     },
 
@@ -144,16 +184,25 @@ org.dedu.draw.Graph = Backbone.Model.extend({
 
     removeSection: function () {
         this.get('cells').remove(this.selectionSet);
+        var selectionIDs = {};
+        for(var i=0;i<this.selectionSet.length;i++){
+            selectionIDs[this.selectionSet[i].get('redID')] = this.selectionSet[i] instanceof org.dedu.draw.Link?'link':'node';
+        }
+        this.notify.apply(this,['node-red:node-link-removed'].concat(selectionIDs));
+        this.selectionSet = [];
+    },
+
+    notify:function(evt){
+        var args = Array.prototype.slice.call(arguments, 1);
+        this.trigger.apply(this, [evt].concat(args));
     },
 
     // Get a cell by `id`.
     getCell: function(id) {
-
         return this.get('cells').get(id);
     },
 
     getElements: function() {
-
         return _.map(this._nodes, function(exists, node) { return this.getCell(node); }, this);
     },
 

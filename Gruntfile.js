@@ -42,7 +42,7 @@ module.exports = function(grunt){
         concat:{
             dist:{
                 files:{
-                    '../../JS/node-red/editor/vendor/joint_chart/dist/joint_chart.js':js.core,
+                    '../node-red/public/vendor/joint_chart/dist/joint_chart.js':js.core,
                    // 'dist/joint_chart.plugins.js':js.plugins
                 }
             }
