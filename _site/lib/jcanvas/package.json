@@ -1,0 +1,96 @@
+{
+  "_args": [
+    [
+      "jcanvas",
+      "D:\\code\\target\\joint"
+    ]
+  ],
+  "_cnpm_publish_time": 1455078629783,
+  "_from": "jcanvas@*",
+  "_id": "jcanvas@16.2.9",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/jcanvas",
+  "_nodeVersion": "5.0.0",
+  "_npmOperationalInternal": {
+    "host": "packages-5-east.internal.npmjs.com",
+    "tmp": "tmp/jcanvas-16.2.9.tgz_1455078626932_0.30024766945280135"
+  },
+  "_npmUser": {
+    "email": "caleb@calebevans.me",
+    "name": "caleb531"
+  },
+  "_npmVersion": "3.3.9",
+  "_phantomChildren": {},
+  "_requested": {
+    "name": "jcanvas",
+    "raw": "jcanvas",
+    "rawSpec": "",
+    "scope": null,
+    "spec": "*",
+    "type": "range"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "http://registry.npm.taobao.org/jcanvas/download/jcanvas-16.2.9.tgz",
+  "_shasum": "e125f5161e539ca88af42228877322bec94d003c",
+  "_shrinkwrap": null,
+  "_spec": "jcanvas",
+  "_where": "D:\\code\\target\\joint",
+  "author": {
+    "email": "calebevans.me@gmail.com",
+    "name": "Caleb Evans",
+    "url": "http://calebevans.me/"
+  },
+  "bugs": {
+    "url": "https://github.com/caleb531/jcanvas/issues"
+  },
+  "dependencies": {
+    "jquery": ">=1.4.0"
+  },
+  "description": "jCanvas brings jQuery's powerful syntax and capability to the HTML5 canvas. Quickly create canvas-based apps that can utilize layers, animations, events, and much more. jCanvas works on all modern browsers and platforms, including iOS and Android.",
+  "devDependencies": {
+    "qunit": ">=1.2.0"
+  },
+  "directories": {},
+  "dist": {
+    "noattachment": false,
+    "shasum": "e125f5161e539ca88af42228877322bec94d003c",
+    "size": 77049,
+    "tarball": "http://registry.npm.taobao.org/jcanvas/download/jcanvas-16.2.9.tgz"
+  },
+  "gitHead": "08f66f1bfff210bf7f861d6d25593f88e721ab83",
+  "homepage": "http://projects.calebevans.me/jcanvas/",
+  "keywords": [
+    "animation",
+    "canvas",
+    "events",
+    "html5",
+    "jquery"
+  ],
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/caleb531/jcanvas/blob/master/LICENSE.txt"
+    }
+  ],
+  "main": "jcanvas.js",
+  "maintainers": [
+    {
+      "name": "caleb531",
+      "email": "caleb@calebevans.me"
+    }
+  ],
+  "name": "jcanvas",
+  "optionalDependencies": {},
+  "publish_time": 1455078629783,
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/caleb531/jcanvas.git"
+  },
+  "scripts": {},
+  "title": "jCanvas",
+  "version": "16.2.9"
+}
