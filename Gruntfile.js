@@ -42,8 +42,12 @@ module.exports = function(grunt){
         concat:{
             dist:{
                 files:{
+                   'dist/joint_chart.js':js.core
+                }
+            },
+            debug:{
+                files:{
                     '../node-red/public/vendor/joint_chart/dist/joint_chart.js':js.core,
-                   // 'dist/joint_chart.plugins.js':js.plugins
                 }
             }
         },

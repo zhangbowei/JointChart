@@ -2304,6 +2304,7 @@ var org = {
 
                             continue;
                         }
+                        
 
                         _.each(extension, function(copy, key) {
 
@@ -3346,6 +3347,7 @@ var org = {
 
 org.dedu.draw.Cell = Backbone.Model.extend({
 
+
     constructor:function(attributes,options){
         var defaults;
         var attrs = attributes || {};
@@ -3357,6 +3359,7 @@ org.dedu.draw.Cell = Backbone.Model.extend({
             attrs = _.merge({}, defaults, attrs);
             //</custom code>
         }
+        attrs.redID = attrs.redID || (1+Math.random()*4294967295).toString(16);  //be used by user program
         this.set(attrs, options);
         this.initialize.apply(this, arguments);
     },
@@ -3750,7 +3753,7 @@ org.dedu.draw.CellView = Backbone.View.extend({
     },
 
     highlight: function (el, opt) {
-        el = !el ? this.el : this.$(el)[0] || this.el;
+        el = !el ? this.el : $(el,$(this.el))[0] || this.el;
 
         // set partial flag if the highlighted element is not the entire view.
         opt = opt || {};
@@ -3814,6 +3817,15 @@ org.dedu.draw.CellView = Backbone.View.extend({
         }
     },
 
+    pointerdblclick: function(evt, x, y) {
+
+        this.notify('cell:pointerdblclick', evt, x, y);
+    },
+    pointerclick: function(evt, x, y) {
+        this.notify('cell:pointerclick', evt, x, y);
+    },
+
+
     mouseover: function(evt) {
 
         this.notify('cell:mouseover', evt);
@@ -3848,7 +3860,8 @@ org.dedu.draw.Element = org.dedu.draw.Cell.extend({
             height: 1
         },
         angle: 0,
-        selected:false
+        selected:false,
+
     },
 
     position:function(x,y,opt){
@@ -3939,7 +3952,6 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         if(this.renderView){
             this.renderView();//留给第三方拓展使用
         }
-
         this.update();
         this.resize();
         this.rotate();
@@ -4398,21 +4410,29 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
                  link.set({
                      source: {
                          id: this.model.id,
+                         redID:this.model.get('redID'),
                          selector: this.getSelector(this._closestView.node),
                          port: evt.target.getAttribute('port')
                      },
-                     target: { x: x, y: y }
                  });
              }else{
                  link.set({
                      source: {
                          id: this.model.id,
+                         redID:this.model.get('redID'),
                          selector: this.getSelector(evt.target),
                          port: evt.target.getAttribute('port')
                      },
-                     target: { x: x, y: y }
                  });
              }
+             link.set({
+                 target: { x: x, y: y },
+                 attrs: {
+                     '.marker-target': {
+                         d: 'M 10 0 L 0 5 L 10 10 z'
+                     }
+                 }
+             });
 
 
             paper.model.addCell(link);
@@ -4435,10 +4455,10 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
     },
 
     
-    pointermove:function(evt,tx,ty){
+    pointermove:function(evt,tx,ty,localPoint){
         if(this._linkView){
             // let the linkview deal with this event
-            this._linkView.pointermove(evt, evt.clientX, evt.clientY );
+            this._linkView.pointermove(evt, localPoint.x, localPoint.y );
         }else{
             var grid = this.paper.options.gridSize;
             var interactive = _.isFunction(this.options.interactive) ? this.options.interactive(this, 'pointermove') : this.options.interactive;
@@ -4494,24 +4514,23 @@ org.dedu.draw.Link = org.dedu.draw.Cell.extend({
         '<path class="connection_line"/>',
         '<path class="marker-source" fill="black" stroke="black" />',
         '<path class="marker-target" fill="black" stroke="black" />',
-        '<path class="connection-wrap"/>',
+        // '<path class="connection-wrap"/>',
         '<g class="labels"/>',
-        '<g class="marker-vertices"/>',
-        '<g class="marker-arrowheads"/>',
-        '<g class="link-tools"/>'
+        // '<g class="marker-vertices"/>',
+         '<g class="marker-arrowheads"/>',
+        // '<g class="link-tools"/>'
     ].join(''),
 
+    labelMarkup: [
+        '<g class="label">',
+        '<rect />',
+        '<text />',
+        '</g>'
+    ].join(''),
 
-    // The default markup for showing/removing vertices. These elements are the children of the .marker-vertices element (see `this.markup`).
-    // Only .marker-vertex and .marker-vertex-remove element have special meaning. The former is used for
-    // dragging vertices (changin their position). The latter is used for removing vertices.
-    vertexMarkup: [
-        '<g class="marker-vertex-group" transform="translate(<%= x %>, <%= y %>)">',
-        '<circle class="marker-vertex" idx="<%= idx %>" r="10" />',
-        '<path class="marker-vertex-remove-area" idx="<%= idx %>" d="M16,5.333c-7.732,0-14,4.701-14,10.5c0,1.982,0.741,3.833,2.016,5.414L2,25.667l5.613-1.441c2.339,1.317,5.237,2.107,8.387,2.107c7.732,0,14-4.701,14-10.5C30,10.034,23.732,5.333,16,5.333z" transform="translate(5, -33)"/>',
-        '<path class="marker-vertex-remove" idx="<%= idx %>" transform="scale(.8) translate(9.5, -37)" d="M24.778,21.419 19.276,15.917 24.777,10.415 21.949,7.585 16.447,13.087 10.945,7.585 8.117,10.415 13.618,15.917 8.116,21.419 10.946,24.248 16.447,18.746 21.948,24.248z">',
-        '<title>Remove vertex.</title>',
-        '</path>',
+    arrowheadMarkup: [
+        '<g class="marker-arrowhead-group marker-arrowhead-group-<%= end %>">',
+        '<path class="marker-arrowhead" end="<%= end %>" d="M 26 0 L 0 13 L 26 26 z" />',
         '</g>'
     ].join(''),
 
@@ -4545,6 +4564,11 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
             this.constructor.prototype.watchSource = this.createWatcher("source");
             this.constructor.prototype.watchTarget = this.createWatcher("target");
         }
+
+        // `_.labelCache` is a mapping of indexes of labels in the `this.get('labels')` array to
+        // `<g class="label">` nodes wrapped by Vectorizer. This allows for quick access to the
+        // nodes in `updateLabelPosition()` in order to update the label positions.
+        this._labelCache = {};
 
         // keeps markers bboxes and positions again for quicker access
         this._markerCache = {};
@@ -4734,8 +4758,14 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         // Only the connection path is mandatory
         if (!this._V.connection_line) throw new Error('link: no connection path in the markup');
 
-        this.renderVertexMarkers();
+        // rendering labels has to be run after the link is appended to DOM tree. (otherwise <Text> bbox
+        // returns zero values)
+
+        this.renderArrowheadMarkers();
         this.vel.append(children);
+        // rendering labels has to be run after the link is appended to DOM tree. (otherwise <Text> bbox
+        // returns zero values)
+        this.renderLabels();
 
         // start watching the ends of the link for changes
         this.watchSource(this.model, this.model.get('source'))
@@ -4745,23 +4775,95 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         return this;
     },
 
-    renderVertexMarkers: function () {
+    renderLabels: function() {
 
-        if(!this._V.markerVertices) return this;
+        if (!this._V.labels) return this;
 
-        var $markerVertices = $(this._V.markerVertices.node).empty();
+        this._labelCache = {};
+        var $labels = $(this._V.labels.node).empty();
+
+        var labels = this.model.get('labels') || [];
+        if (!labels.length) return this;
+
+        var labelTemplate = _.template(this.model.get('labelMarkup') || this.model.labelMarkup);
+
+        // This is a prepared instance of a vectorized SVGDOM node for the label element resulting from
+        // compilation of the labelTemplate. The purpose is that all labels will just `clone()` this
+        // node to create a duplicate.
+        var labelNodeInstance = V(labelTemplate());
+
+        _.each(labels, function(label, idx) {
+
+            var labelNode = labelNodeInstance.clone().node;
+            V(labelNode).attr('label-idx', idx);
+
+            // Cache label nodes so that the `updateLabels()` can just update the label node positions.
+            this._labelCache[idx] = V(labelNode);
+
+            var $text = $(labelNode).find('text');
+            var $rect = $(labelNode).find('rect');
+
+            // Text attributes with the default `text-anchor` and font-size set.
+            var textAttributes = _.extend({ 'text-anchor': 'middle', 'font-size': 14 }, org.dedu.draw.util.getByPath(label, 'attrs/text', '/'));
+
+            $text.attr(_.omit(textAttributes, 'text'));
+            if (!_.isUndefined(textAttributes.text)) {
+
+                V($text[0]).text(textAttributes.text + '');
+            }
+            // Note that we first need to append the `<text>` element to the DOM in order to
+            // get its bounding box.
+            $labels.append(labelNode);
+
+            // `y-alignment` - center the text element around its y coordinate.
+            var textBbox = V($text[0]).bbox(true, $labels[0]);
+            V($text[0]).translate(0, -textBbox.height / 2);
+
+            // Add default values.
+            var rectAttributes = _.extend({
+
+                fill: 'white',
+                rx: 3,
+                ry: 3
+
+            }, org.dedu.draw.util.getByPath(label, 'attrs/rect', '/'));
+
+            $rect.attr(_.extend(rectAttributes, {
+                x: textBbox.x,
+                y: textBbox.y - textBbox.height / 2,  // Take into account the y-alignment translation.
+                width: textBbox.width,
+                height: textBbox.height
+            }));
+        }, this);
+
+        return this;        
+    },
+
+    renderArrowheadMarkers: function() {
+
+        // Custom markups might not have arrowhead markers. Therefore, jump of this function immediately if that's the case.
+        if (!this._V.markerArrowheads) return this;
+
+        var $markerArrowheads = $(this._V.markerArrowheads.node);
+
+        $markerArrowheads.empty();
 
         // A special markup can be given in the `properties.vertexMarkup` property. This might be handy
         // if default styling (elements) are not desired. This makes it possible to use any
         // SVG elements for .marker-vertex and .marker-vertex-remove tools.
-        var markupTemplate = _.template(this.model.get('vertexMarkup') || this.model.vertexMarkup);
+        var markupTemplate = _.template(this.model.get('arrowheadMarkup') || this.model.arrowheadMarkup);
 
-        _.each(this.model.get('vertices'), function (vertex, idx) {
-            $markerVertices.append(V(markupTemplate(_.extend({idx:idx},vertex))).node);
-        });
+        if(this.model.get('attrs')['.marker-source']){
+            this._V.sourceArrowhead = V(markupTemplate({ end: 'source' }));
+        }
+        if(this.model.get('attrs')['.marker-target']){
+            this._V.targetArrowhead = V(markupTemplate({ end: 'target' }));
+        }
+        $markerArrowheads.append(this._V.sourceArrowhead?this._V.sourceArrowhead.node:undefined, this._V.targetArrowhead?this._V.targetArrowhead.node:undefined);
 
         return this;
     },
+
 
     // Default is to process the `attrs` object and set attributes on subelements based on the selectors.
     update: function () {
@@ -4800,9 +4902,7 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
             }
 
             this.findBySelector(selector).attr(attrs);
-
         }, this);
-
 
         // Path finding
         var vertices = this.route = this.findRoute(this.model.get('vertices') || []);
@@ -4816,12 +4916,112 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         this._V.connection_background.attr({'d':pathData});
         this._V.connection_outline.attr({'d':pathData});
         this._V.connection_line.attr({'d':pathData});
+
+		this._translateAndAutoOrientArrows(this._V.markerSource, this._V.markerTarget);
+
+        this.updateLabelPositions();
+        this.updateArrowheadMarkers();
+
         if(this.model.get('selected')){
             this._V.connection_line.attr({'stroke': '#ff7f0e'});
         }else{
             this._V.connection_line.attr({'stroke': '#888'});
         }
     },
+
+    updateLabelPositions: function() {
+
+        if (!this._V.labels) return this;
+
+        var labels = this.model.get('labels') || [];
+        if(!labels.length) return this;
+
+        var connectionElement = this._V.connection_line.node;
+        var connectionLength = connectionElement.getTotalLength();
+
+        // Firefox returns connectionLength=NaN in odd cases (for bezier curves).
+        // In that case we won't update labels at all.
+        if (!_.isNaN(connectionLength)) {
+            var samples;
+
+            _.each(labels,function(label,idx){
+                var position = label.position;
+                var distance = _.isObject(position) ? position.distance : position;
+                var offset = _.isObject(position) ? position.offset : { x: 0, y: 0 };
+
+                distance = (distance > connectionLength) ? connectionLength : distance; // sanity check
+                distance = (distance < 0) ? connectionLength + distance : distance;
+                distance = (distance > 1) ? distance : connectionLength * distance;
+
+                var labelCoordinates = connectionElement.getPointAtLength(distance);
+
+                if (_.isObject(offset)) {
+
+                    // Just offset the label by the x,y provided in the offset object.
+                    labelCoordinates = g.point(labelCoordinates).offset(offset.x, offset.y);
+
+                } else if (_.isNumber(offset)) {
+                    if (!samples) {
+                        samples = this._samples || this._V.connection_line.sample(this.options.sampleInterval);
+                    }
+
+                    // Offset the label by the amount provided in `offset` to an either
+                    // side of the link.
+
+                    // 1. Find the closest sample & its left and right neighbours.
+                    var minSqDistance = Infinity;
+                    var closestSample;
+                    var closestSampleIndex;
+                    var p;
+                    var sqDistance;
+                    for (var i = 0, len = samples.length; i < len; i++) {
+                        p = samples[i];
+                        sqDistance = g.line(p, labelCoordinates).squaredLength();
+                        if (sqDistance < minSqDistance) {
+                            minSqDistance = sqDistance;
+                            closestSample = p;
+                            closestSampleIndex = i;
+                        }
+                    }
+                    var prevSample = samples[closestSampleIndex - 1];
+                    var nextSample = samples[closestSampleIndex + 1];
+
+                    // 2. Offset the label on the perpendicular line between
+                    // the current label coordinate ("at `distance`") and
+                    // the next sample.
+                    var angle = 0;
+                    if (nextSample) {
+                        angle = g.point(labelCoordinates).theta(nextSample);
+                    } else if (prevSample) {
+                        angle = g.point(prevSample).theta(labelCoordinates);
+                    }
+                    labelCoordinates = g.point(labelCoordinates).offset(offset).rotate(labelCoordinates, angle - 90);                                        
+                }                
+
+                this._labelCache[idx].attr('transform', 'translate(' + labelCoordinates.x + ', ' + labelCoordinates.y + ')');                                                
+            },this);
+        }                
+
+        return this;
+
+    },
+
+    updateArrowheadMarkers: function() {
+
+        if (!this._V.markerArrowheads) return this;
+
+        // getting bbox of an element with `display="none"` in IE9 ends up with access violation
+        if ($.css(this._V.markerArrowheads.node, 'display') === 'none') return this;
+
+        var sx = this.getConnectionLength() < this.options.shortLinkLength ? .5 : 1;
+        this._V.sourceArrowhead && this._V.sourceArrowhead.scale(sx);
+        this._V.targetArrowhead && this._V.targetArrowhead.scale(sx);
+
+        this._translateAndAutoOrientArrows(this._V.sourceArrowhead, this._V.targetArrowhead);
+
+        return this;
+    },
+
 
     findRoute: function (oldVertices) {
         var namespace = org.dedu.draw.routers;
@@ -4877,6 +5077,12 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
 
         return pathData;
     },
+
+    getConnectionLength: function() {
+
+        return this._V.connection_line.node.getTotalLength();
+    },
+
 
     _findConnectionPoints: function (vertices) {
         // cache source and target points
@@ -4976,6 +5182,15 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         this._beforeArrowheadMove();
     },
 
+    // Return `true` if the link is allowed to perform a certain UI `feature`.
+    // Example: `can('vertexMove')`, `can('labelMove')`.
+    can: function(feature) {
+
+        var interactive = _.isFunction(this.options.interactive) ? this.options.interactive(this, 'pointerdown') : this.options.interactive;
+        if (!_.isObject(interactive) || interactive[feature] !== false) return true;
+        return false;
+    },
+
     _createValidateConnectionArgs: function (arrowhead) {
         // It makes sure the arguments for validateConnection have the following form:
         // (source view, source magnet, target view, target magnet and link view)
@@ -5010,6 +5225,26 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         return validateConnectionArgs;
     },
 
+    _translateAndAutoOrientArrows: function(sourceArrow, targetArrow) {
+
+        // Make the markers "point" to their sticky points being auto-oriented towards
+        // `targetPosition`/`sourcePosition`. And do so only if there is a markup for them.
+        if (sourceArrow) {
+            sourceArrow.translateAndAutoOrient(
+                this.sourcePoint,
+                _.first(this.route) || this.targetPoint,
+                this.paper.viewport
+            );
+        }
+
+        if (targetArrow) {
+            targetArrow.translateAndAutoOrient(
+                this.targetPoint,
+                _.last(this.route) || this.sourcePoint,
+                this.paper.viewport
+            );
+        }
+    },
 
     // Find a point that is the start of the connection.
     // If `selectorOrPoint` is a point, then we're done and that point is the start of the connection.
@@ -5139,7 +5374,6 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
 
     focus: function () {
         //org.dedu.draw.CellView.prototype.focus.apply(this);
-        console.log(this.model.get('selected'));
         this.highlight('connection_line');
     },
 
@@ -5163,8 +5397,42 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
         this._dx = x;
         this._dy = y;
 
+        // if are simulating pointerdown on a link during a magnet click, skip link interactions
+        if (evt.target.getAttribute('magnet') != null) return;
+
+        var interactive = _.isFunction(this.options.interactive) ? this.options.interactive(this, 'pointerdown') : this.options.interactive;
+        if (interactive === false) return;
+
         var className = evt.target.getAttribute('class');
         var parentClassName = evt.target.parentNode.getAttribute('class');
+        var labelNode;
+        if (parentClassName === 'label') {
+            className = parentClassName;
+            labelNode = evt.target.parentNode;
+        } else {
+            labelNode = evt.target;
+        }
+
+        switch (className) {
+            case 'marker-arrowhead':
+                if (this.can('arrowheadMove')) {
+                    this.startArrowheadMove(evt.target.getAttribute('end'));
+                }
+                break;
+
+            case 'label':
+                if (this.can('labelMove')) {
+                    this._action = 'label-move';
+                    this._labelIdx = parseInt(V(labelNode).attr('label-idx'), 10);
+                    // Precalculate samples so that we don't have to do that
+                    // over and over again while dragging the label.
+                    this._samples = this._V.connection.sample(1);
+                    this._linkLength = this._V.connection.node.getTotalLength();
+                }
+                break;
+
+
+        }
 
 
         var targetParentEvent = evt.target.parentNode.getAttribute('event');
@@ -5226,6 +5494,7 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
                                     this._closestView = view;
                                     this._closestEnd = {
                                         id: view.model.id,
+                                        redID:view.model.get('redID'),
                                         selector: view.getSelector(magnet),
                                         port: magnet.getAttribute('port')
                                     };
@@ -5239,6 +5508,7 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
                     this._closestView && this._closestView.highlight(this._closestEnd.selector, { connecting: true, snapping: true });
 
                     this.model.set(this._arrowhead, this._closestEnd || { x: x, y: y }, { ui: true });
+
                 }else{
                     // checking views right under the pointer
 
@@ -5299,6 +5569,7 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
             if (paperOptions.snapLinks) {
                 // Finish off link snapping. Everything except view unhighlighting was already done on pointermove.
                 this._closestView && this._closestView.unhighlight(this._closestEnd.selector, { connecting: true, snapping: true });
+                this._closestView && this.trigger.apply(this.model, ['link:complete']);
                 this._closestView = this._closestEnd = null;
             }else{
                 var viewUnderPointer = this._viewUnderPointer;
@@ -5320,7 +5591,7 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
                     if (selector != null) arrowheadValue.port = port;
                     if (port != null) arrowheadValue.selector = selector;
                     this.model.set(arrowhead, arrowheadValue, { ui: true });
-
+                    this.trigger.apply(this.model, 'link:complete');
                 }else{
                     this.remove();
                 }
@@ -5328,7 +5599,7 @@ org.dedu.draw.LinkView = org.dedu.draw.CellView.extend({
             }
             this._afterArrowheadMove();
         }
-
+    
         delete this._action;
         this.notify('link:pointerup', evt, x, y);
         org.dedu.draw.CellView.prototype.pointerup.apply(this, arguments);
@@ -5434,7 +5705,6 @@ org.dedu.draw.Graph = Backbone.Model.extend({
     },
 
     _restructureOnRemove: function(cell) {
-
         if (cell.isLink()) {
             delete this._edges[cell.id];
             var source = cell.get('source');
@@ -5448,6 +5718,27 @@ org.dedu.draw.Graph = Backbone.Model.extend({
         } else {
             delete this._nodes[cell.id];
         }
+    },
+
+
+    isExist:function(id){
+        var models = this.get('cells').models;
+        for(var i=0;i<models.length;i++){
+            if(models[i].get('redID')==id){
+                return true;
+            }
+        }
+        return false;
+    },
+
+    getCellByRedID:function(id) {
+        var models = this.get('cells').models;
+        for(var i in models){
+            if(models[i].get('redID') == id){
+                return models[i];
+            }
+        }
+
     },
 
     selectAll:function(){
@@ -5485,7 +5776,27 @@ org.dedu.draw.Graph = Backbone.Model.extend({
 
     addCell:function(cell,options){
         this.get('cells').add(this._prepareCell(cell), options || {});
-
+        var args ;
+        var self = this;
+        if(cell instanceof org.dedu.draw.Link){
+            cell.on('link:complete',function(){
+ 
+                args = {
+                    source: this.get('source'),
+                    target: this.get('target'),
+                    redID: this.get('redID'),
+                    type: 'link'
+                };
+                self.notify.apply(this,['node-red:node-link-added'].concat(args));
+            },cell);
+        }else if(cell instanceof org.dedu.draw.Element){
+            args = {
+                redID: cell.get('redID'),
+                type:'node'
+            };
+            this.notify.apply(this,['node-red:node-link-added'].concat(args));
+        }
+        
         return this;
     },
 
@@ -5497,16 +5808,25 @@ org.dedu.draw.Graph = Backbone.Model.extend({
 
     removeSection: function () {
         this.get('cells').remove(this.selectionSet);
+        var selectionIDs = {};
+        for(var i=0;i<this.selectionSet.length;i++){
+            selectionIDs[this.selectionSet[i].get('redID')] = this.selectionSet[i] instanceof org.dedu.draw.Link?'link':'node';
+        }
+        this.notify.apply(this,['node-red:node-link-removed'].concat(selectionIDs));
+        this.selectionSet = [];
+    },
+
+    notify:function(evt){
+        var args = Array.prototype.slice.call(arguments, 1);
+        this.trigger.apply(this, [evt].concat(args));
     },
 
     // Get a cell by `id`.
     getCell: function(id) {
-
         return this.get('cells').get(id);
     },
 
     getElements: function() {
-
         return _.map(this._nodes, function(exists, node) { return this.getCell(node); }, this);
     },
 
@@ -5957,10 +6277,10 @@ org.dedu.draw.shape.simple.SuspendPortViewInterface = {
 
         },this);
     },
-    render:function(){
-        org.dedu.draw.ElementView.prototype.render.apply(this, arguments);
+    renderView:function(){
+        //org.dedu.draw.ElementView.prototype.render.apply(this, arguments);
         this.renderSuspendPort();
-        this.update();
+        //this.update();
     },
 
     renderSuspendPort: function () {
@@ -6064,19 +6384,21 @@ org.dedu.draw.shape.simple.GenericView = org.dedu.draw.ElementView.extend(
                 this.rotatableNode.append(tip);
 
             }
-
+            this.showSuspendPort(); // show four ports
         },
         removeTipMagnet: function (el, opt) {
             var port = V(el);
             if($(".tip-"+port.attr('port'),this.$el)[0]){
                 $(".tip.tip-"+port.attr('port'),this.$el).remove();
             }
+            this.hideSuspendPort(); // hide four ports
         },
         focus: function () {
             this.vel.findOne('.body').addClass('selected');
         },
         unfocus:function(){
             this.vel.findOne('.body').removeClass('selected');
+            
         }
     })
 );
@@ -6117,13 +6439,13 @@ org.dedu.draw.shape.uml.StartState = org.dedu.draw.shape.simple.Generic.extend({
                 'ref-y':0
             }                        
        },
-       attrs:{
-            '.uml-start-state-body':{
-                'r':20,
-                'stroke':'#333',
-                'fill':'#444'
-            }
-       }
+       attrs: {
+           '.uml-start-state-body': {
+               'r': 20,
+               'stroke': '#333',
+               'fill': '#444'
+           }
+       },
     }, org.dedu.draw.shape.simple.Generic.prototype.defaults)
 });
 
@@ -6190,68 +6512,73 @@ org.dedu.draw.shape.uml.State = org.dedu.draw.shape.simple.Generic.extend({
         attrs: {
             '.uml-state-body': {
                 'width': 200, 'height': 100, 'rx': 10, 'ry': 10,
-                'fill': '#fff9ca', 'stroke': '#333', 'stroke-width': 3
-            },
-            '.uml-state-separator': {
-                'stroke': '#333', 'stroke-width': 2
+                'fill': '#fff9ca', 'stroke': '#333', 'stroke-width': 1
             },
             '.uml-state-name': {
                 'ref': '.uml-state-body', 'ref-x': .5, 'ref-y': 5, 'text-anchor': 'middle',
                 'fill': '#000000', 'font-family': 'Courier New', 'font-size': 16,
                 'font-weight':'bold'
             },
+            '.uml-state-separator': {
+                'stroke': '#333', 'stroke-width': 2
+            },
             '.uml-state-events': {
                 'ref': '.uml-state-separator', 'ref-x': 5, 'ref-y': 5,
-                'fill': '#000000', 'font-family': 'Courier New', 'font-size': 14
+                'fill': '#000000', 'font-family': 'Courier New', 'font-size': 14,
+                'display':'block'
             }
         },
 
-        name: 'State',
-        events: []
+        events: [],
+        name: 'State'
+    }, org.dedu.draw.shape.simple.Generic.prototype.defaults)
 
-    }, org.dedu.draw.shape.simple.Generic.prototype.defaults),
+});
 
-    initialize: function() {
+org.dedu.draw.shape.uml.StateView = org.dedu.draw.shape.simple.GenericView.extend({
 
-        this.on({
-            'change:name': this.updateName,
-            'change:events': this.updateEvents,
-            'change:size': this.updatePath
-        }, this);
+    initialize: function () {
+        this.model.on('change:name', this.updateName,this);
+        this.model.on('change:events', this.updateEvents,this);
+        this.model.on('change:size', this.updatePath,this);
+        org.dedu.draw.shape.simple.GenericView.prototype.initialize.apply(this,arguments);
+    },
 
+    render:function(){
+        org.dedu.draw.shape.simple.GenericView.prototype.render.apply(this,arguments);
+        this.originSize = this.model.get('size');
         this.updateName();
-        this.updateEvents();
         this.updatePath();
-
-        org.dedu.draw.shape.simple.Generic.prototype.initialize.apply(this, arguments);
-    },
-    updateName: function() {
-
-        this.attr('.uml-state-name/text', this.get('name'));
+        this.updateEvents();
     },
 
-    updateEvents: function() {
-
-        this.attr('.uml-state-events/text', this.get('events').join('\n'));
+    updateEvents: function () {
+        this.vel.findOne('.uml-state-events').text(this.model.get('events').join('\n'));
+        var $text = $(".uml-state-events",this.$el);
+        var textBbox = V($text[0]).bbox(true, this.$el);
+        var size = this.originSize;
+        this.model.set('size',{
+            width:size.width,
+            height:size.height+textBbox.height
+        });
+    },
+    updateName: function () {
+        this.vel.findOne('.uml-state-name').text(this.model.get('name'));
     },
 
-    updatePath: function() {
+    updatePath: function () {
 
-        var middle = this.get('size').height/5*3;
+        var $text = $(".uml-state-name",this.$el);
+        var textBbox = V($text[0]).bbox(true, this.$el);
 
-        var d = 'M 0 '+middle+' L ' + this.get('size').width + " "+middle;
+        var d = 'M 0 '+textBbox.height+' L ' + this.model.get('size').width + " "+textBbox.height;
 
         // We are using `silent: true` here because updatePath() is meant to be called
         // on resize and there's no need to to update the element twice (`change:size`
         // triggers also an update).
-        this.attr('.uml-state-separator/d', d, { silent: true });
-    }
+        this.vel.findOne('.uml-state-separator').attr('d', d);
+    },
 
-});
-
-
-
-org.dedu.draw.shape.uml.StateView = org.dedu.draw.shape.simple.GenericView.extend({
     focus: function () {
         this.vel.findOne('.uml-state-body').attr({
             fill:"#ffc21d"
@@ -6261,19 +6588,38 @@ org.dedu.draw.shape.uml.StateView = org.dedu.draw.shape.simple.GenericView.exten
         this.vel.findOne('.uml-state-body').attr({
             fill:"#fff9ca"
         });
+        this.hideSuspendPort();
     }
 });
 
-org.dedu.draw.shape.uml.StartStateView  = org.dedu.draw.shape.uml.StateView.extend({
+org.dedu.draw.shape.uml.StartStateView  = org.dedu.draw.shape.simple.GenericView.extend({
+
+    focus: function () {
+        this.vel.findOne('.uml-state-body').attr({
+            fill:"#ffc21d"
+        });
+    },
     unfocus: function () {
         this.vel.findOne('.uml-state-body').attr({
             fill:"#444"
         });
-    },
+        this.hideSuspendPort();
+    }
+
 });
 
-org.dedu.draw.shape.uml.EndStateView  = org.dedu.draw.shape.uml.StateView.extend({
-
+org.dedu.draw.shape.uml.EndStateView  = org.dedu.draw.shape.simple.GenericView.extend({
+    focus: function () {
+        this.vel.findOne('.uml-state-body').attr({
+            fill:"#ffc21d"
+        });
+    },
+    unfocus:function(){
+        this.vel.findOne('.uml-state-body').attr({
+            fill:"#fff9ca"
+        });
+        this.hideSuspendPort();
+    }
 });
 org.dedu.draw.Paper = Backbone.View.extend({
     className: 'paper',
@@ -6399,6 +6745,8 @@ org.dedu.draw.Paper = Backbone.View.extend({
       "mousemove .vis":"canvasMouseMove",
       "mouseup .vis":"canvasMouseUp",
       "mouseover .element":"cellMouseover",
+        'dblclick': 'mousedblclick',
+        'click': 'mouseclick',
 
     },
 
@@ -6660,6 +7008,8 @@ org.dedu.draw.Paper = Backbone.View.extend({
         var evt = org.dedu.draw.util.normalizeEvent(evt);
         var view = this.findView(evt.target);
 
+        if (this.guard(evt, view)) return;
+
         var localPoint = this.snapToGrid({ x: evt.clientX, y: evt.clientY });
         if(view){
             if(this.guard(evt,view)) return;
@@ -6682,6 +7032,10 @@ org.dedu.draw.Paper = Backbone.View.extend({
         evt = org.dedu.draw.util.normalizeEvent(evt);
         var localPoint = this.snapToGrid({ x: evt.clientX, y: evt.clientY });
         if(this.sourceView){
+            if(this.sourceView instanceof org.dedu.draw.LinkView){
+                this.sourceView.pointermove(evt,localPoint.x,localPoint.y);
+                return;
+            }
             //Mouse moved counter.
             // this._mousemoved++;
             var grid = this.options.gridSize;
@@ -6692,9 +7046,9 @@ org.dedu.draw.Paper = Backbone.View.extend({
             this.sourceView._dy = g.snapToGrid(localPoint.y, grid);
 
             _.each(this.model.selectionSet, function (model) {
-                this.findViewByModel(model).pointermove(evt,tx,ty);
+                this.findViewByModel(model).pointermove(evt,tx,ty,localPoint);
             },this);
-           // this.sourceView.pointermove(evt,localPoint.x,localPoint.y);
+
         }else{
             this.trigger('blank:pointermove', evt, localPoint.x, localPoint.y);
         }
@@ -6739,12 +7093,52 @@ org.dedu.draw.Paper = Backbone.View.extend({
            this.trigger('resize',width,height);
     },
 
-    mousedblclick:function(){
-        console.log("blclick~");
+    // Interaction.
+    // ------------
+
+    mousedblclick: function(evt) {
+
+        evt.preventDefault();
+        evt = org.dedu.draw.util.normalizeEvent(evt);
+
+        var view = this.findView(evt.target);
+        if (this.guard(evt, view)) return;
+
+        var localPoint = this.snapToGrid({ x: evt.clientX, y: evt.clientY });
+
+        if (view) {
+
+            view.pointerdblclick(evt, localPoint.x, localPoint.y);
+
+        } else {
+
+            this.trigger('blank:pointerdblclick', evt, localPoint.x, localPoint.y);
+        }
     },
 
-    mouseclick:function(){
-        console.log("click~");
+    mouseclick: function(evt) {
+
+        // Trigger event when mouse not moved.
+        if (this._mousemoved <= this.options.clickThreshold) {
+
+            evt = org.dedu.draw.util.normalizeEvent(evt);
+
+            var view = this.findView(evt.target);
+            if (this.guard(evt, view)) return;
+
+            var localPoint = this.snapToGrid({ x: evt.clientX, y: evt.clientY });
+
+            if (view) {
+
+                view.pointerclick(evt, localPoint.x, localPoint.y);
+
+            } else {
+
+                this.trigger('blank:pointerclick', evt, localPoint.x, localPoint.y);
+            }
+        }
+
+        this._mousemoved = 0;
     },
 
     pointermove:function(){
@@ -6762,7 +7156,7 @@ org.dedu.draw.Paper = Backbone.View.extend({
     },
 
     cellMouseover:function(evt){
-        console.log("cellMouseover");
+
         evt = org.dedu.draw.util.normalizeEvent(evt);
         var view = this.findView(evt.target);
         if(view){
@@ -6776,8 +7170,8 @@ org.dedu.draw.Paper = Backbone.View.extend({
     guard: function(evt, view) {
         if(view && view.model && (view.model instanceof org.dedu.draw.Cell)){
             return false;
-        }else if(1){
-
+        }else if (this.svg === evt.target || this.el === evt.target || $.contains(this.svg, evt.target)) {
+            return false;
         }
         return true; //Event guarded. Paper should not react on it in any way.
     },
