@@ -17,13 +17,16 @@ org.dedu.draw.shape.simple.PortsModelInterface = {
 };
 
 org.dedu.draw.shape.simple.SuspendPortViewInterface = {
-    initialize:function(){
+    initialize:function(options){
+        if(options.skip_render){
+            return;
+        }
+        org.dedu.draw.ElementView.prototype.initialize.apply(this, arguments);
         //this.listenTo(this, 'add:ports', this.update);
         //this.listenTo(this,'remove:ports',this.update);
         _.bindAll(this,"showSuspendPort","hideSuspendPort");
         this.$el.on('mouseenter',this.showSuspendPort);
         this.$el.on('mouseleave',this.hideSuspendPort);
-        org.dedu.draw.ElementView.prototype.initialize.apply(this, arguments);
 
         _.bindAll(this,"addTipMagnet","removeTipMagnet");
 

@@ -302,7 +302,7 @@ org.dedu.draw.Cell = Backbone.Model.extend({
 org.dedu.draw.CellView = Backbone.View.extend({
      tagName: 'g',
 
-     attributes:function(){
+    attributes:function(){
         return {'model-id':this.model.id}
      },
 
@@ -323,7 +323,7 @@ org.dedu.draw.CellView = Backbone.View.extend({
 
     },
 
-    initialize:function(){
+    initialize:function(options){
 
     },
 
@@ -426,8 +426,6 @@ org.dedu.draw.CellView = Backbone.View.extend({
         return this;
     },
 
-
-
     // Find the closest element that has the `magnet` attribute set to `true`. If there was not such
     // an element found, return the root element of the cell view.
     findMagnet: function (el) {
@@ -474,6 +472,7 @@ org.dedu.draw.CellView = Backbone.View.extend({
 
         this.notify('cell:pointerdblclick', evt, x, y);
     },
+
     pointerclick: function(evt, x, y) {
         this.notify('cell:pointerclick', evt, x, y);
     },

@@ -12,8 +12,7 @@ org.dedu.draw.Element = org.dedu.draw.Cell.extend({
             height: 1
         },
         angle: 0,
-        selected:false,
-
+        selected:false
     },
 
     position:function(x,y,opt){
@@ -83,10 +82,14 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         return 'element node '+this.model.get('type').replace('.',' ','g')
     },
 
-    initialize:function(){
-        _.bindAll(this, 'translate', 'resize', 'rotate');
+    initialize:function(options){
 
+        if(options.skip_render){
+            return;
+        }
         org.dedu.draw.CellView.prototype.initialize.apply(this, arguments);
+
+        _.bindAll(this, 'translate', 'resize', 'rotate');
 
         this.listenTo(this.model, 'change:position', this.translate);
         this.listenTo(this.model, 'change:size', this.resize);
@@ -458,7 +461,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
 
         if (!_.isUndefined(yAlignment) || !_.isUndefined(xAlignment)) {
 
-            var velBBox = vel.bbox(false, this.paper.viewport);
+            var velBBox = vel.bbox(false, this.paper&&this.paper.viewport || this.options.paper&&this.options.paper.viewport);
 
             // `y-alignment` when set to `middle` causes centering of the subelement around its new y coordinate.
             if (yAlignment === 'middle') {
@@ -493,28 +496,6 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         this.vel.attr('transform','translate('+position.x+','+position.y+')');
     },
 
-    resize: function () {
-        var size = this.model.get('size') || { width: 1, height: 1 };
-        var angle = this.model.get('angle') || 0;
-
-        var scalable = this.scalableNode;
-        if (!scalable) {
-            // If there is no scalable elements, than there is nothing to resize.
-            return;
-        }
-        var scalableBbox = scalable.bbox(true);
-        // Make sure `scalableBbox.width` and `scalableBbox.height` are not zero which can happen if the element does not have any content. By making
-        // the width/height 1, we prevent HTML errors of the type `scale(Infinity, Infinity)`.
-        scalable.attr('transform', 'scale(' + (size.width / (scalableBbox.width || 1)) + ',' + (size.height / (scalableBbox.height || 1)) + ')');
-
-
-        // Update must always be called on non-rotated element. Otherwise, relative positioning
-        // would work with wrong (rotated) bounding boxes.
-        this.update();
-    },
-
-
-
     findMagnetsInArea:function(rect, opt) {
         rect = g.rect(rect);
         var views = [this.up,this.down,this.left,this.right];
@@ -525,7 +506,6 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
             return view && rect.intersect(g.rect(view.bbox(false,this.paper.viewport)));
         },this);
     },
-
 
     pointerdown:function(evt,x,y){
         var paper = this.paper;
@@ -606,7 +586,6 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         this._closestView = null;
     },
 
-    
     pointermove:function(evt,tx,ty,localPoint){
         if(this._linkView){
             // let the linkview deal with this event

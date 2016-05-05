@@ -1,3 +1,7 @@
+
+
+
+
 var graph = new org.dedu.draw.Graph;
 
 var chart = new org.dedu.draw.Chart({
@@ -12,7 +16,7 @@ var chart = new org.dedu.draw.Chart({
     }
 });
 
-var json = '{"id":"30127b7.fcfed84","x":429,"y":487,"w":140,"z":"210d0848.def2f8","type":"inject","_def":{"category":"input","color":"#a6bbcf","defaults":{"name":{"value":""},"topic":{"value":""},"payload":{"value":""},"payloadType":{"value":"date"},"repeat":{"value":""},"crontab":{"value":""},"once":{"value":false}},"inputs":0,"outputs":1,"icon":"inject.png","button":{},"set":{"id":"node-red/inject","name":"inject","types":["inject"],"enabled":true,"module":"node-red","version":"0.11.2-git","added":true}},"inputs":0,"outputs":1,"name":"","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"changed":true,"h":30}';
+var json = '{"id":"30127b7.fcfed84","x":29,"y":187,"w":140,"z":"210d0848.def2f8","type":"inject","_def":{"category":"input","color":"#a6bbcf","defaults":{"name":{"value":""},"topic":{"value":""},"payload":{"value":""},"payloadType":{"value":"date"},"repeat":{"value":""},"crontab":{"value":""},"once":{"value":false}},"inputs":0,"outputs":1,"icon":"inject.png","button":{},"set":{"id":"node-red/inject","name":"inject","types":["inject"],"enabled":true,"module":"node-red","version":"0.11.2-git","added":true}},"inputs":0,"outputs":1,"name":"","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"changed":true,"h":30}';
 var data = JSON.parse(json);
 var halo;
 
@@ -32,7 +36,7 @@ var halo;
 
 var rb = new org.dedu.draw.shape.basic.Rect({
     position: { x: 350, y: 50 },
-    size: { width: 100, height: 40 },
+    size: { width: 50, height: 30 },
     attrs: { text: { text: 'basic.Rect' } }
 });
 graph.addCell(rb);
@@ -40,7 +44,7 @@ graph.addCell(rb);
 
 var m1 = new org.dedu.draw.shape.node.Model({
     position: { x: data.x, y: data.y },
-    size: { width: 140, height: 30 },
+    size: { width: 120, height: 30 },
     attrs: {
 
     },
@@ -52,7 +56,7 @@ graph.addCell(m1);
 
 var m2 = new org.dedu.draw.shape.devs.Model({
     position: { x: 50, y: 50 },
-    size: { width: 90, height: 90 },
+    size: { width: 50, height: 40 },
     inPorts: ['in1','in2'],
     outPorts: ['out'],
     attrs: {
@@ -66,8 +70,8 @@ graph.addCell(m2);
 
 
 var m3 = new org.dedu.draw.shape.devs.Model({
-    position: { x: 350, y: 150 },
-    size: { width: 90, height: 90 },
+    position: { x: 35, y: 15 },
+    size: { width: 50, height: 40 },
     inPorts: ['in1','in2'],
     outPorts: ['out'],
     attrs: {
@@ -80,37 +84,37 @@ var m3 = new org.dedu.draw.shape.devs.Model({
 graph.addCell(m3);
 
 var state1 = new org.dedu.draw.shape.uml.State({
-    position: { x: 250, y: 150 },
-    size: { width: 90, height: 45 },
+    position: { x: 150, y: 150 },
+    size: { width: 55, height: 30 },
     events:['enter','exit'],
 })
 
 graph.addCell(state1);
 
 var start_state = new org.dedu.draw.shape.uml.StartState({
-    position: { x: 450, y: 150 },
+    position: { x: 250, y: 150 },
     size: { width: 30, height: 30 },
 });
 
 graph.addCell(start_state);
 
 var end_state = new org.dedu.draw.shape.uml.EndState({
-    position: { x: 450, y: 150 },
+    position: { x: 100, y: 150 },
     size: { width: 30, height: 30 },
 });
 
 graph.addCell(end_state);
 
 var simple = new org.dedu.draw.shape.simple.Generic({
-    position: { x: 250, y: 450 },
-    size: { width: 90, height: 45 },
+    position: { x: 50, y: 150 },
+    size: { width: 40, height: 20 },
 })
 
 graph.addCell(simple);
 
 var simple2 = new org.dedu.draw.shape.simple.Generic({
     position: { x: 350, y: 350 },
-    size: { width: 90, height: 45 },
+    size: { width: 30, height: 30 },
 })
 
 graph.addCell(simple2);
@@ -133,16 +137,7 @@ var link6 = new org.dedu.draw.Link({
 //graph.addCell(link6);
 
 
-chart.on('cell:pointerdblclick',function(cellView){
-    if(cellView instanceof org.dedu.draw.shape.uml.StateView){
-        var event = prompt("please input event",'');
-        if (event!=null && event!=""){
-            var events = cellView.model.get('events');
-            events.push(event);
-            cellView.model.trigger('change:events');
-        }
-    }
-},chart);
+
 
 //var link1 = new org.dedu.draw.Link({
 //    source:{id:m1.id},

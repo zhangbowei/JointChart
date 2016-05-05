@@ -181,6 +181,35 @@ org.dedu.draw.Graph = Backbone.Model.extend({
     },
 
 
+    clear: function(opt) {
+
+        opt = _.extend({}, opt, { clear: true });
+
+        var cells = this.get('cells').models;
+
+        if (cells.length === 0) return this;
+
+        this.trigger('batch:start', { batchName: 'clear' });
+
+        // The elements come after the links.
+        _.sortBy(cells,function(cell) {
+            return cell.isLink() ? 1 : 2;
+        });
+
+        do {
+
+            // Remove all the cells one by one.
+            // Note that all the links are removed first, so it's
+            // safe to remove the elements without removing the connected
+            // links first.
+            cells.shift().remove(opt);
+
+        } while (cells.length > 0);
+
+        this.trigger('batch:stop', { batchName: 'clear' });
+
+        return this;
+    },
 
     removeSection: function () {
         this.get('cells').remove(this.selectionSet);

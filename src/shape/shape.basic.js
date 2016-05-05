@@ -16,18 +16,22 @@ org.dedu.draw.shape.basic.Generic = org.dedu.draw.Element.extend({
 org.dedu.draw.shape.basic.Rect  = org.dedu.draw.shape.basic.Generic.extend({
     markup: '<g class="rotatable"><g class="scalable"><rect/></g><text/></g>',
     defaults: org.dedu.draw.util.deepSupplement({
+        size: {
+            width: 60,
+            height: 40
+        },
         type: 'basic.Rect',
         attrs: {
             'rect': {
                 fill: '#ffffff',
                 stroke: '#000000',
-                width: 100,
-                height: 60
+                width: 60,
+                height: 40
             },
             'text': {
                 fill: '#000000',
                 text: '',
-                'font-size': 14,
+                'font-size': 10,
                 'ref-x': .5,
                 'ref-y': .5,
                 'text-anchor': 'middle',
@@ -37,8 +41,132 @@ org.dedu.draw.shape.basic.Rect  = org.dedu.draw.shape.basic.Generic.extend({
         }
 
     }, org.dedu.draw.shape.basic.Generic.prototype.defaults)
-})
+});
 
+org.dedu.draw.shape.basic.CRect = org.dedu.draw.shape.basic.Rect.extend({
+    defaults:org.dedu.draw.util.deepSupplement({
+        attrs:{
+            'rect':{
+                rx:7,
+                ry:7
+            }
+        }
+    },org.dedu.draw.shape.basic.Rect.prototype.defaults)
+});
+
+org.dedu.draw.shape.basic.Circle = org.dedu.draw.shape.basic.Generic.extend({
+
+    markup: '<g class="rotatable"><g class="scalable"><circle/></g><text/></g>',
+
+    defaults: org.dedu.draw.util.deepSupplement({
+
+        type: 'basic.Circle',
+        size: { width: 60, height: 60 },
+        attrs: {
+            'circle': {
+                fill: '#ffffff',
+                stroke: '#000000',
+                r: 30,
+                cx:0,
+                cy:0
+            },
+            'text': {
+                'font-size': 14,
+                text: '',
+                'text-anchor': 'middle',
+                'ref-x': .5,
+                'ref-y': .5,
+                'y-alignment': 'middle',
+                fill: '#000000',
+                'font-family': 'Arial, helvetica, sans-serif'
+            }
+        }
+    }, org.dedu.draw.shape.basic.Generic.prototype.defaults)
+});
+
+
+org.dedu.draw.shape.basic.Ellipse = org.dedu.draw.shape.basic.Generic.extend({
+
+    markup: '<g class="rotatable"><g class="scalable"><ellipse/></g><text/></g>',
+
+    defaults: org.dedu.draw.util.deepSupplement({
+
+        type: 'basic.Ellipse',
+        size: { width: 60, height: 40 },
+        attrs: {
+            'ellipse': {
+                fill: '#ffffff',
+                stroke: '#000000',
+                rx: 30,
+                ry: 20,
+            },
+            'text': {
+                'font-size': 14,
+                text: '',
+                'text-anchor': 'middle',
+                'ref-x': .5,
+                'ref-y': .5,
+                'y-alignment': 'middle',
+                fill: '#000000',
+                'font-family': 'Arial, helvetica, sans-serif'
+            }
+        }
+    }, org.dedu.draw.shape.basic.Generic.prototype.defaults)
+});
+
+org.dedu.draw.shape.basic.Polygon = org.dedu.draw.shape.basic.Generic.extend({
+
+    markup: '<g class="rotatable"><g class="scalable"><polygon/></g><text/></g>',
+
+    defaults: org.dedu.draw.util.deepSupplement({
+
+        type: 'basic.Polygon',
+        size: { width: 60, height: 40 },
+        attrs: {
+            'polygon': {
+                fill: '#ffffff',
+                stroke: '#000000'
+            },
+            'text': {
+                'font-size': 14,
+                text: '',
+                'text-anchor': 'middle',
+                'ref-x': .5,
+                'ref-dy': 20,
+                'y-alignment': 'middle',
+                fill: '#000000',
+                'font-family': 'Arial, helvetica, sans-serif'
+            }
+        }
+    }, org.dedu.draw.shape.basic.Generic.prototype.defaults)
+});
+
+org.dedu.draw.shape.basic.Polyline = org.dedu.draw.shape.basic.Generic.extend({
+
+    markup: '<g class="rotatable"><g class="scalable"><polyline/></g><text/></g>',
+
+    defaults: org.dedu.draw.util.deepSupplement({
+
+        type: 'basic.Polyline',
+        size: { width: 60, height: 40 },
+        attrs: {
+            'polyline': {
+                fill: '#ffffff',
+                stroke: '#000000'
+            },
+            'text': {
+                'font-size': 14,
+                text: '',
+                'text-anchor': 'middle',
+                'ref-x': .5,
+                'ref-dy': 20,
+                'y-alignment': 'middle',
+                fill: '#000000',
+                'font-family': 'Arial, helvetica, sans-serif'
+            }
+        }
+    }, org.dedu.draw.shape.basic.Generic.prototype.defaults)
+});
 
 org.dedu.draw.shape.basic.PortsModelInterface = {
     initialize:function(){
@@ -85,11 +213,15 @@ org.dedu.draw.shape.basic.PortsModelInterface = {
 };
 
 org.dedu.draw.shape.basic.PortsViewInterface = {
-    initialize: function () {
+    initialize: function (options) {
 
+        if(options.skip_render){
+            return;
+        }
+
+        org.dedu.draw.ElementView.prototype.initialize.apply(this, arguments);
         // `Model` emits the `process:ports` whenever it's done configuring the `attrs` object for ports.
         this.listenTo(this.model, 'process:ports', this.update);
-        org.dedu.draw.ElementView.prototype.initialize.apply(this, arguments);
         this.model.on('change:selected',function(){
             if(this.model.get("selected")){
                 this.focus();

@@ -27,14 +27,14 @@ org.dedu.draw.shape.devs.Model = org.dedu.draw.shape.basic.Generic.extend(
                         stroke: '#000000'
                     },
                     '.port-body': {
-                        r: 10,
+                        r: 5,
                         magnet: true,
                         stroke: '#000000'
                     },
                     text: {
                         'pointer-events': 'none',
                     },
-                    '.label': { text: 'Model', 'ref-x': .5, 'ref-y': 10, ref: '.body', 'text-anchor': 'middle', fill: '#000000' },
+                    '.label': { 'font-size': 10,text: 'Model', 'ref-x': .5, 'ref-y': 10, ref: '.body', 'text-anchor': 'middle', fill: '#000000' },
                     '.inPorts .port-label': { x:-15, dy: 4, 'text-anchor': 'end', fill: '#000000' },
                     '.outPorts .port-label':{ x: 15, dy: 4, fill: '#000000' }
                 }

@@ -177,7 +177,6 @@ org.dedu.draw.Paper = Backbone.View.extend({
         }, this);
     },
 
-
     getModelById:function(id){
 
         return this.model.getCell(id);
