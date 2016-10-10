@@ -48,6 +48,11 @@ joint.chart = (function(){
             'uml.State':{
 
             }
+        },
+        'uml_region': {
+            'uml.Region': {
+                
+            }
         }
     };
 

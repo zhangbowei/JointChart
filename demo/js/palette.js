@@ -65,6 +65,17 @@ joint.palette = (function(){
                     }
                 }
             }
+        },
+        'uml_region': {
+            'uml.Region': {
+                size:{width:31,height:20},
+                position:{x:2,y:10},
+                attrs: {
+                    '.uml-region-name': {
+                        'font-size': 8
+                    }
+                }
+            }
         }
     };
 

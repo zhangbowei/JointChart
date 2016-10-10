@@ -79,7 +79,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
     ],
 
     className:function(){
-        return 'element node '+this.model.get('type').replace('.',' ','g')
+        return 'element node '+this.model.get('type').replace(/\./g, ' ');
     },
 
     initialize:function(options){
