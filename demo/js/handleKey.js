@@ -26,6 +26,14 @@ joint.keyboard = (function() {
                     cellView.model.trigger('change:events');
                 }
             }
+            if(cellView instanceof org.dedu.draw.shape.uml.RegionView){
+                var event = prompt("please input event",'');
+                if (event!=null && event!=""){
+                    var events = cellView.model.get('events');
+                    events.push(event);
+                    cellView.model.trigger('change:events');
+                }
+            }
         },chart);
         init_event();
 

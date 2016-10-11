@@ -60,6 +60,9 @@ org.dedu.draw.Graph = Backbone.Model.extend({
 
         cells.on('add', this._restructureOnAdd, this);
         cells.on('remove', this._restructureOnRemove, this);
+        cells.on('all', function(name) {console.log(name);}, this);
+        cells.on('remove', function(name) {console.log(name);}, this);
+        cells.on('add', function(name) {console.log(name);}, this);
     },
 
 

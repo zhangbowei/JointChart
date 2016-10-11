@@ -300,7 +300,7 @@ org.dedu.draw.Cell = Backbone.Model.extend({
 });
 
 org.dedu.draw.CellView = Backbone.View.extend({
-     tagName: 'g',
+    tagName: 'g',
 
     attributes:function(){
         return {'model-id':this.model.id}

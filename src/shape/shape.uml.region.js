@@ -68,7 +68,7 @@ org.dedu.draw.shape.uml.RegionView = org.dedu.draw.shape.simple.GenericView.exte
         var textBbox = V($text[0]).bbox(true, this.$el);
         var size = this.originSize;
         this.model.set('size',{
-            width:size.width,
+            width:size.width+textBbox.width,
             height:size.height+textBbox.height
         });
     },
