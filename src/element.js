@@ -12,17 +12,17 @@ org.dedu.draw.Element = org.dedu.draw.Cell.extend({
             height: 1
         },
         angle: 0,
-        selected:false
+        selected: false
     },
 
-    position:function(x,y,opt){
+    position: function (x, y, opt) {
 
     },
 
-    translate:function(tx,ty,opt){
+    translate: function (tx, ty, opt) {
         tx = tx || 0;
         ty = ty || 0;
-        if(tx === 0 && ty === 0){
+        if (tx === 0 && ty === 0) {
             // Like nothing has happened.
             return this;
         }
@@ -62,7 +62,7 @@ org.dedu.draw.Element = org.dedu.draw.Cell.extend({
 
 org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
 
-    SPECIAL_ATTRIBUTES:[
+    SPECIAL_ATTRIBUTES: [
         'style',
         'text',
         'html',
@@ -78,13 +78,13 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         'port'
     ],
 
-    className:function(){
-        return 'element node '+this.model.get('type').replace(/\./g, ' ');
+    className: function () {
+        return 'element node ' + this.model.get('type').replace(/\./g, ' ');
     },
 
-    initialize:function(options){
+    initialize: function (options) {
 
-        if(options.skip_render){
+        if (options.skip_render) {
             return;
         }
         org.dedu.draw.CellView.prototype.initialize.apply(this, arguments);
@@ -98,13 +98,13 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
 
     },
 
-    render:function(){
+    render: function () {
         this.$el.empty();
         this.renderMarkup();
         this.rotatableNode = this.vel.findOne('.rotatable');
         this.scalableNode = this.vel.findOne('.scalable');
 
-        if(this.renderView){
+        if (this.renderView) {
             this.renderView();//留给第三方拓展使用
         }
         this.update();
@@ -116,15 +116,15 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
 
     // `prototype.markup` is rendered by default. Set the `markup` attribute on the model if the
     // default markup is not desirable.
-    renderMarkup:function(){
+    renderMarkup: function () {
         var markup = this.model.get('markup') || this.model.markup;
-        if(markup){
+        if (markup) {
             var nodes = V(markup);
             this.vel.append(nodes);
         }
     },
 
-    resize:function(){
+    resize: function () {
         var size = this.model.get('size') || {
             width: 1,
             height: 1
@@ -145,7 +145,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
     },
 
     // Default is to process the `attrs` object and set attributes on subelements based on the selectors.
-    update: function(cell, renderingOnlyAttrs) {
+    update: function (cell, renderingOnlyAttrs) {
 
         var allAttrs = this.model.get('attrs');
 
@@ -158,7 +158,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         var relativelyPositioned = [];
         var nodesBySelector = {};
 
-        _.each(renderingOnlyAttrs || allAttrs, function(attrs, selector) {
+        _.each(renderingOnlyAttrs || allAttrs, function (attrs, selector) {
 
             // Elements that should be updated.
             var $selected = this.findBySelector(selector);
@@ -198,7 +198,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
             // to rewrite them, if needed. (i.e display: 'none')
             if (!_.isUndefined(attrs.text)) {
 
-                $selected.each(function() {
+                $selected.each(function () {
 
                     V(this).text(attrs.text + '', { lineHeight: attrs.lineHeight, textPath: attrs.textPath, annotations: attrs.annotations });
                 });
@@ -209,7 +209,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
             // method as some of the attributes might be namespaced (e.g. xlink:href) which fails with jQuery attr().
             var finalAttributes = _.omit(attrs, specialAttributes);
 
-            $selected.each(function() {
+            $selected.each(function () {
 
                 V(this).attr(finalAttributes);
             });
@@ -228,7 +228,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
 
             if (!_.isUndefined(attrs.html)) {
 
-                $selected.each(function() {
+                $selected.each(function () {
 
                     $(this).html(attrs.html + '');
                 });
@@ -246,7 +246,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
                 !_.isUndefined(attrs['ref-height'])
             ) {
 
-                _.each($selected, function(el, index, list) {
+                _.each($selected, function (el, index, list) {
                     var $el = $(el);
                     // copy original list selector to the element
                     $el.selector = list.selector;
@@ -268,7 +268,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
 
         renderingOnlyAttrs = renderingOnlyAttrs || {};
 
-        _.each(relativelyPositioned, function($el) {
+        _.each(relativelyPositioned, function ($el) {
 
             // if there was a special attribute affecting the position amongst renderingOnlyAttributes
             // we have to merge it with rest of the element's attributes as they are necessary
@@ -288,7 +288,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         }
     },
 
-    positionRelative: function(vel, bbox, attributes, nodesBySelector) {
+    positionRelative: function (vel, bbox, attributes, nodesBySelector) {
 
         var ref = attributes['ref'];
         var refDx = parseFloat(attributes['ref-dx']);
@@ -461,7 +461,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
 
         if (!_.isUndefined(yAlignment) || !_.isUndefined(xAlignment)) {
 
-            var velBBox = vel.bbox(false, this.paper&&this.paper.viewport || this.options.paper&&this.options.paper.viewport);
+            var velBBox = vel.bbox(false, this.paper && this.paper.viewport || this.options.paper && this.options.paper.viewport);
 
             // `y-alignment` when set to `middle` causes centering of the subelement around its new y coordinate.
             if (yAlignment === 'middle') {
@@ -470,7 +470,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
 
             } else if (isFinite(yAlignment)) {
 
-                ty += (yAlignment > -1 && yAlignment < 1) ?  velBBox.height * yAlignment : yAlignment;
+                ty += (yAlignment > -1 && yAlignment < 1) ? velBBox.height * yAlignment : yAlignment;
             }
 
             // `x-alignment` when set to `middle` causes centering of the subelement around its new x coordinate.
@@ -480,101 +480,122 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
 
             } else if (isFinite(xAlignment)) {
 
-                tx += (xAlignment > -1 && xAlignment < 1) ?  velBBox.width * xAlignment : xAlignment;
+                tx += (xAlignment > -1 && xAlignment < 1) ? velBBox.width * xAlignment : xAlignment;
             }
         }
 
         vel.translate(tx, ty);
     },
 
-    rotate:function(){
+    rotate: function () {
 
     },
 
-    translate:function(){
-        var position = this.model.get('position') || {x:0,y:0};
-        this.vel.attr('transform','translate('+position.x+','+position.y+')');
+    translate: function () {
+        var position = this.model.get('position') || { x: 0, y: 0 };
+        this.vel.attr('transform', 'translate(' + position.x + ',' + position.y + ')');
     },
 
-    findMagnetsInArea:function(rect, opt) {
+    findMagnetsInArea: function (rect, opt) {
         rect = g.rect(rect);
-        var views = [this.up,this.down,this.left,this.right];
+        var views = [this.up, this.down, this.left, this.right];
 
-    //    console.log(this.up.bbox(false,this.paper.viewport));
+        //    console.log(this.up.bbox(false,this.paper.viewport));
 
-        return _.filter(views,function(view){
-            return view && rect.intersect(g.rect(view.bbox(false,this.paper.viewport)));
-        },this);
+        return _.filter(views, function (view) {
+            return view && rect.intersect(g.rect(view.bbox(false, this.paper.viewport)));
+        }, this);
     },
 
-    pointerdown:function(evt,x,y){
-        var paper = this.paper;
+    findScalesInArea: function (rect, opt) {
+        rect = g.rect(rect);
+        var views = [this.scale];
 
+        //    console.log(this.up.bbox(false,this.paper.viewport));
+
+        return _.filter(views, function (view) {
+            return view && rect.intersect(g.rect(view.bbox(false, this.paper.viewport)));
+        }, this);
+    },
+
+    pointerdown: function (evt, x, y) {
+        var paper = this.paper;
         var r = 3;
+
+        var scalesInArea = this.findScalesInArea({ x: x - r, y: y - r, width: 2 * r, height: 2 * r });
+
+        this._scalesPosition = null;
+        _.each(scalesInArea, function (view) {
+            this._scalesPosition = view.bbox(false, this.paper.viewport);
+        }, this);
+        if (this._scalesPosition) {
+            this._scalesSize = _.clone(this.model.get('size'));
+            return;
+        }
+
         var viewsInArea = this.findMagnetsInArea({ x: x - r, y: y - r, width: 2 * r, height: 2 * r });
 
         var distance;
         var minDistance = Number.MAX_VALUE;
         var pointer = g.point(x, y);
 
-        _.each(viewsInArea, function(view) {
+        _.each(viewsInArea, function (view) {
             if (view.attr('magnet') !== 'false') {
                 // find distance from the center of the model to pointer coordinates
-                distance = g.rect(view.bbox(false,this.paper.viewport)).center().distance(pointer);
+                distance = g.rect(view.bbox(false, this.paper.viewport)).center().distance(pointer);
 
                 // the connection is looked up in a circle area by `distance < r`
                 if (distance < r && distance < minDistance) {
                     minDistance = distance;
                     this._closestView = view;
-                   // this._closestEnd = { id: view.model.id };
-
+                    // this._closestEnd = { id: view.model.id };
                 }
             }
-        },this);
+        }, this);
 
         // target is a valid magnet start linking
-         if(this._closestView || evt.target.getAttribute('magnet') && paper.options.validateMagnet.call(paper, this, evt.target)){
+        if (this._closestView || evt.target.getAttribute('magnet') && paper.options.validateMagnet.call(paper, this, evt.target)) {
             //this.model.trigger('batch:start', { batchName: 'add-link' });
 
             var link = paper.getDefaultLink(this, evt.target);
 
-             if(this._closestView){
-                 link.set({
-                     source: {
-                         id: this.model.id,
-                         redID:this.model.get('redID'),
-                         selector: this.getSelector(this._closestView.node),
-                         port: evt.target.getAttribute('port')
-                     },
-                 });
-             }else{
-                 link.set({
-                     source: {
-                         id: this.model.id,
-                         redID:this.model.get('redID'),
-                         selector: this.getSelector(evt.target),
-                         port: evt.target.getAttribute('port')
-                     },
-                 });
-             }
-             link.set({
-                 target: { x: x, y: y },
-                 attrs: {
-                     '.marker-target': {
-                         d: 'M 10 0 L 0 5 L 10 10 z'
-                     }
-                 }
-             });
+            if (this._closestView) {
+                link.set({
+                    source: {
+                        id: this.model.id,
+                        redID: this.model.get('redID'),
+                        selector: this.getSelector(this._closestView.node),
+                        port: evt.target.getAttribute('port')
+                    },
+                });
+            } else {
+                link.set({
+                    source: {
+                        id: this.model.id,
+                        redID: this.model.get('redID'),
+                        selector: this.getSelector(evt.target),
+                        port: evt.target.getAttribute('port')
+                    },
+                });
+            }
+            link.set({
+                target: { x: x, y: y },
+                attrs: {
+                    '.marker-target': {
+                        d: 'M 10 0 L 0 5 L 10 10 z'
+                    }
+                }
+            });
 
 
             paper.model.addCell(link);
 
             this._linkView = paper.findViewByModel(link);
 
-            this._linkView.pointerdown(evt,x,y);
+            this._linkView.pointerdown(evt, x, y);
             this._linkView.startArrowheadMove('target');
 
-        }else{
+        } else {
             this._dx = x;
             this._dy = y;
 
@@ -586,34 +607,43 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         this._closestView = null;
     },
 
-    pointermove:function(evt,tx,ty,localPoint){
-        if(this._linkView){
-            // let the linkview deal with this event
-            this._linkView.pointermove(evt, localPoint.x, localPoint.y );
-        }else{
-            var grid = this.paper.options.gridSize;
-            var interactive = _.isFunction(this.options.interactive) ? this.options.interactive(this, 'pointermove') : this.options.interactive;
-            if (interactive !== false) {
-                //var position = this.model.get('position');
-                // Make sure the new element's position always snaps to the current grid after
-                // translate as the previous one could be calculated with a different grid size.
-                //var tx = g.snapToGrid(position.x, grid) - position.x + g.snapToGrid(x - this._dx, grid);
-                //var ty = g.snapToGrid(position.y, grid) - position.y + g.snapToGrid(y - this._dy, grid);
+    pointermove: function (evt, tx, ty, localPoint) {
+        if (this._scalesPosition) {
+            var oldSize = this._scalesSize;
+            var position = this._scalesPosition;
+            var width = oldSize.width + (evt.offsetX - position.x);
+            var height = oldSize.height + (evt.offsetY - position.y);
+            this.model.resize(width, height);
+        } else {
 
-                this.model.translate(tx, ty, {
-                    restrictedArea: this.restrictedArea,
-                    ui: true
-                });
+            if (this._linkView) {
+                // let the linkview deal with this event
+                this._linkView.pointermove(evt, localPoint.x, localPoint.y);
+            } else {
+                var grid = this.paper.options.gridSize;
+                var interactive = _.isFunction(this.options.interactive) ? this.options.interactive(this, 'pointermove') : this.options.interactive;
+                if (interactive !== false) {
+                    //var position = this.model.get('position');
+                    // Make sure the new element's position always snaps to the current grid after
+                    // translate as the previous one could be calculated with a different grid size.
+                    //var tx = g.snapToGrid(position.x, grid) - position.x + g.snapToGrid(x - this._dx, grid);
+                    //var ty = g.snapToGrid(position.y, grid) - position.y + g.snapToGrid(y - this._dy, grid);
+
+                    this.model.translate(tx, ty, {
+                        restrictedArea: this.restrictedArea,
+                        ui: true
+                    });
+                }
+
+                //this._dx = g.snapToGrid(x, grid);
+                //this._dy = g.snapToGrid(y, grid);
+                org.dedu.draw.CellView.prototype.pointermove.apply(this, arguments);
+                this.notify('element:pointermove', evt, tx, ty);
             }
-
-            //this._dx = g.snapToGrid(x, grid);
-            //this._dy = g.snapToGrid(y, grid);
-            org.dedu.draw.CellView.prototype.pointermove.apply(this, arguments);
-            this.notify('element:pointermove', evt, tx, ty);
         }
     },
 
-    pointerup:function(evt,x,y){
+    pointerup: function (evt, x, y) {
         if (this._linkView) {
 
             var linkView = this._linkView;
@@ -629,7 +659,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
             }
             delete this._linkView;
 
-        }else{
+        } else {
             this.notify('element:pointerup', evt, x, y);
             org.dedu.draw.CellView.prototype.pointerup.apply(this, arguments);
         }

@@ -55,10 +55,12 @@ org.dedu.draw.shape.simple.SuspendPortViewInterface = {
         this.right = V(suspendTemplate({dir:'right'})).attr("port",'right');
         this.down = V(suspendTemplate({dir:'down'})).attr("port",'down');
         this.left = V(suspendTemplate({dir:'left'})).attr("port",'left');
+        this.scale = V(suspendTemplate({dir:'scale'})).attr("port", "scale");
         this.rotatableNode.append(this.up);
         this.rotatableNode.append(this.right);
         this.rotatableNode.append(this.down);
         this.rotatableNode.append(this.left);
+        this.rotatableNode.append(this.scale);
 
         var port_ref_position = this.model.get('port_ref_position');
         if(port_ref_position){
@@ -75,7 +77,8 @@ org.dedu.draw.shape.simple.SuspendPortViewInterface = {
                 '.portup':{'ref-x':.5,'ref-y':0},
                 '.portright':{'ref-x':'100%','ref-y':.5},
                 '.portdown':{'ref-x':.5,'ref-y':'100%'},
-                '.portleft':{'ref-y':.5,'ref-x':0}
+                '.portleft':{'ref-y':.5,'ref-x':0},
+                '.portscale':{magnet: false,'ref-y':'100%','ref-x':'100%',stroke:"#000000",'stroke-width':"1",fill:"#000000"}
             });
         }
 
@@ -88,12 +91,14 @@ org.dedu.draw.shape.simple.SuspendPortViewInterface = {
         this.right.attr('display','block');
         this.down.attr('display','block');
         this.left.attr('display','block');
+        this.scale.attr('display','block');
     },
     hideSuspendPort: function () {
         this.up.attr('display','none');
         this.right.attr('display','none');
         this.down.attr('display','none');
         this.left.attr('display','none');
+        this.scale.attr('display','block');
     }
 };
 
