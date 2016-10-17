@@ -111,6 +111,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         this.resize();
         this.rotate();
         this.translate();
+        
         return this;
     },
 
