@@ -111,7 +111,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         this.resize();
         this.rotate();
         this.translate();
-        
+
         return this;
     },
 
@@ -512,11 +512,15 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         rect = g.rect(rect);
         var views = [this.scale];
 
-        //    console.log(this.up.bbox(false,this.paper.viewport));
-
         return _.filter(views, function (view) {
             return view && rect.intersect(g.rect(view.bbox(false, this.paper.viewport)));
         }, this);
+    },
+
+    findViewInArea: function (rect, opt) {
+        rect = g.rect(rect);
+        var view = this.vel;
+        return view && rect.containsRect(g.rect(view.bbox(false, this.paper.viewport)));
     },
 
     pointerdown: function (evt, x, y) {
@@ -608,6 +612,58 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         this._closestView = null;
     },
 
+    viewMoveInto: function () {
+        //search parent element, which contains this.
+        var paper = this.paper;
+        var parentArray = [];
+        _.each(paper._views, function (cell) {
+            var view = V(cell.$el[0].firstChild);
+
+            if ((this.id != cell.id) && this.findViewInArea(view.bbox(false, this.paper.viewport))) {
+                parentArray.push(cell);
+            }
+        }, this);
+
+
+        //judge circle or not, and init deviation
+        var absoluteSon = this.vel.bbox(false, this.paper.viewport);
+        var rx=0, ry=0;
+
+        if (this.$el.children('.rotatable').children('.scalable').children('circle').length != 0) {
+            rx = Math.floor(absoluteSon.width / 2);
+            ry = Math.floor(absoluteSon.height / 2);
+        } 
+
+        //Depending on situation, set position for this.
+
+        if (parentArray.length != 0) {
+            //look for closest cell
+            var absoluteParent, min, father;
+            _.each(parentArray, function (parent, index) {
+                absoluteParent = parent.vel.bbox(false, this.paper.viewport);
+                if (index == 0) {
+                    min = absoluteSon.x - absoluteParent.x;
+                    father = parent;
+                } else {
+                    if (absoluteSon.x - absoluteParent.x <= min) {
+                        father = parent;
+                    }
+                }
+            }, this)
+            //set position for this 
+            if (this.el.parentElement != parent.el) {
+                var absoluteFather = father.vel.bbox(false, this.paper.viewport);
+                this.model.set('position', { x: absoluteSon.x - absoluteFather.x + rx, y: absoluteSon.y - absoluteFather.y + ry});
+                father.vel.append(this.vel);
+            }
+        } else {
+            if (this.el.parentElement != paper.vis) {
+                this.model.set('position', { x: absoluteSon.x + rx, y: absoluteSon.y + ry});
+                V(paper.vis).append(this.vel);
+            }
+        }
+    },
+
     pointermove: function (evt, tx, ty, localPoint) {
         if (this._scalesPosition) {
             var oldSize = this._scalesSize;
@@ -615,32 +671,33 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
             var width = oldSize.width + (evt.offsetX - position.x);
             var height = oldSize.height + (evt.offsetY - position.y);
             this.model.resize(width, height);
+            return;
+        }
+
+        if (this._linkView) {
+            // let the linkview deal with this event
+            this._linkView.pointermove(evt, localPoint.x, localPoint.y);
         } else {
+            var grid = this.paper.options.gridSize;
+            var interactive = _.isFunction(this.options.interactive) ? this.options.interactive(this, 'pointermove') : this.options.interactive;
+            if (interactive !== false) {
+                //var position = this.model.get('position');
+                // Make sure the new element's position always snaps to the current grid after
+                // translate as the previous one could be calculated with a different grid size.
+                //var tx = g.snapToGrid(position.x, grid) - position.x + g.snapToGrid(x - this._dx, grid);
+                //var ty = g.snapToGrid(position.y, grid) - position.y + g.snapToGrid(y - this._dy, grid);
 
-            if (this._linkView) {
-                // let the linkview deal with this event
-                this._linkView.pointermove(evt, localPoint.x, localPoint.y);
-            } else {
-                var grid = this.paper.options.gridSize;
-                var interactive = _.isFunction(this.options.interactive) ? this.options.interactive(this, 'pointermove') : this.options.interactive;
-                if (interactive !== false) {
-                    //var position = this.model.get('position');
-                    // Make sure the new element's position always snaps to the current grid after
-                    // translate as the previous one could be calculated with a different grid size.
-                    //var tx = g.snapToGrid(position.x, grid) - position.x + g.snapToGrid(x - this._dx, grid);
-                    //var ty = g.snapToGrid(position.y, grid) - position.y + g.snapToGrid(y - this._dy, grid);
-
-                    this.model.translate(tx, ty, {
-                        restrictedArea: this.restrictedArea,
-                        ui: true
-                    });
-                }
-
-                //this._dx = g.snapToGrid(x, grid);
-                //this._dy = g.snapToGrid(y, grid);
-                org.dedu.draw.CellView.prototype.pointermove.apply(this, arguments);
-                this.notify('element:pointermove', evt, tx, ty);
+                this.model.translate(tx, ty, {
+                    restrictedArea: this.restrictedArea,
+                    ui: true
+                });
             }
+
+            //this._dx = g.snapToGrid(x, grid);
+            //this._dy = g.snapToGrid(y, grid);
+            org.dedu.draw.CellView.prototype.pointermove.apply(this, arguments);
+            this.notify('element:pointermove', evt, tx, ty);
+
         }
     },
 
@@ -663,6 +720,7 @@ org.dedu.draw.ElementView = org.dedu.draw.CellView.extend({
         } else {
             this.notify('element:pointerup', evt, x, y);
             org.dedu.draw.CellView.prototype.pointerup.apply(this, arguments);
+            this.viewMoveInto();
         }
     }
 
